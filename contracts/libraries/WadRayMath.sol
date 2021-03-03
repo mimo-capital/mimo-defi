@@ -13,58 +13,58 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 library WadRayMath {
   using SafeMath for uint256;
 
-  uint256 internal constant WAD = 1e18;
-  uint256 internal constant halfWAD = WAD / 2;
+  uint256 internal constant _WAD = 1e18;
+  uint256 internal constant _HALF_WAD = _WAD / 2;
 
-  uint256 internal constant RAY = 1e27;
-  uint256 internal constant halfRAY = RAY / 2;
+  uint256 internal constant _RAY = 1e27;
+  uint256 internal constant _HALF_RAY = _RAY / 2;
 
-  uint256 internal constant WAD_RAY_RATIO = 1e9;
+  uint256 internal constant _WAD_RAY_RATIO = 1e9;
 
   function ray() internal pure returns (uint256) {
-    return RAY;
+    return _RAY;
   }
 
   function wad() internal pure returns (uint256) {
-    return WAD;
+    return _WAD;
   }
 
   function halfRay() internal pure returns (uint256) {
-    return halfRAY;
+    return _HALF_RAY;
   }
 
   function halfWad() internal pure returns (uint256) {
-    return halfWAD;
+    return _HALF_WAD;
   }
 
   function wadMul(uint256 a, uint256 b) internal pure returns (uint256) {
-    return halfWAD.add(a.mul(b)).div(WAD);
+    return _HALF_WAD.add(a.mul(b)).div(_WAD);
   }
 
   function wadDiv(uint256 a, uint256 b) internal pure returns (uint256) {
     uint256 halfB = b / 2;
 
-    return halfB.add(a.mul(WAD)).div(b);
+    return halfB.add(a.mul(_WAD)).div(b);
   }
 
   function rayMul(uint256 a, uint256 b) internal pure returns (uint256) {
-    return halfRAY.add(a.mul(b)).div(RAY);
+    return _HALF_RAY.add(a.mul(b)).div(_RAY);
   }
 
   function rayDiv(uint256 a, uint256 b) internal pure returns (uint256) {
     uint256 halfB = b / 2;
 
-    return halfB.add(a.mul(RAY)).div(b);
+    return halfB.add(a.mul(_RAY)).div(b);
   }
 
   function rayToWad(uint256 a) internal pure returns (uint256) {
-    uint256 halfRatio = WAD_RAY_RATIO / 2;
+    uint256 halfRatio = _WAD_RAY_RATIO / 2;
 
-    return halfRatio.add(a).div(WAD_RAY_RATIO);
+    return halfRatio.add(a).div(_WAD_RAY_RATIO);
   }
 
   function wadToRay(uint256 a) internal pure returns (uint256) {
-    return a.mul(WAD_RAY_RATIO);
+    return a.mul(_WAD_RAY_RATIO);
   }
 
   /**
@@ -74,7 +74,7 @@ library WadRayMath {
    * @return z = x^n, in ray
    */
   function rayPow(uint256 x, uint256 n) internal pure returns (uint256 z) {
-    z = n % 2 != 0 ? x : RAY;
+    z = n % 2 != 0 ? x : _RAY;
 
     for (n /= 2; n != 0; n /= 2) {
       x = rayMul(x, x);

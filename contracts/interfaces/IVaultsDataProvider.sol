@@ -14,9 +14,16 @@ interface IVaultsDataProvider {
     uint256 createdAt;
   }
 
-  function a() external view returns (IAddressProvider);
+  //Write
+  function createVault(address _collateralType, address _owner) external returns (uint256);
+
+  function setCollateralBalance(uint256 _id, uint256 _balance) external;
+
+  function setBaseDebt(uint256 _id, uint256 _newBaseDebt) external;
 
   // Read
+  function a() external view returns (IAddressProvider);
+
   function baseDebt(address _collateralType) external view returns (uint256);
 
   function vaultCount() external view returns (uint256);
@@ -40,11 +47,4 @@ interface IVaultsDataProvider {
   function debt() external view returns (uint256);
 
   function collateralDebt(address _collateralType) external view returns (uint256);
-
-  //Write
-  function createVault(address _collateralType, address _owner) external returns (uint256);
-
-  function setCollateralBalance(uint256 _id, uint256 _balance) external;
-
-  function setBaseDebt(uint256 _id, uint256 _newBaseDebt) external;
 }

@@ -7,6 +7,12 @@ interface IAccessController {
   event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
   event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
 
+  function grantRole(bytes32 role, address account) external;
+
+  function revokeRole(bytes32 role, address account) external;
+
+  function renounceRole(bytes32 role, address account) external;
+
   function MANAGER_ROLE() external view returns (bytes32);
 
   function MINTER_ROLE() external view returns (bytes32);
@@ -18,10 +24,4 @@ interface IAccessController {
   function getRoleMember(bytes32 role, uint256 index) external view returns (address);
 
   function getRoleAdmin(bytes32 role) external view returns (bytes32);
-
-  function grantRole(bytes32 role, address account) external;
-
-  function revokeRole(bytes32 role, address account) external;
-
-  function renounceRole(bytes32 role, address account) external;
 }

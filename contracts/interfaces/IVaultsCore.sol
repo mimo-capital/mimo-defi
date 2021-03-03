@@ -3,6 +3,9 @@
 pragma experimental ABIEncoderV2;
 pragma solidity 0.6.12;
 import "../interfaces/IAddressProvider.sol";
+import "../interfaces/IVaultsCoreState.sol";
+import "../interfaces/IWETH.sol";
+import "../liquidityMining/interfaces/IDebtNotifier.sol";
 
 interface IVaultsCore {
   event Opened(uint256 indexed vaultId, address indexed collateralType, address indexed owner);
@@ -18,21 +21,27 @@ interface IVaultsCore {
     address indexed sender
   );
 
-  event CumulativeRateUpdated(
-    address indexed collateralType,
-    uint256 elapsedTime,
-    uint256 newCumulativeRate
-  ); //cumulative interest rate from deployment time T0
-
   event InsurancePaid(uint256 indexed vaultId, uint256 insuranceAmount, address indexed sender);
-
-  function a() external view returns (IAddressProvider);
 
   function deposit(address _collateralType, uint256 _amount) external;
 
+  function depositETH() external payable;
+
+  function depositByVaultId(uint256 _vaultId, uint256 _amount) external;
+
+  function depositETHByVaultId(uint256 _vaultId) external payable;
+
+  function depositAndBorrow(
+    address _collateralType,
+    uint256 _depositAmount,
+    uint256 _borrowAmount
+  ) external;
+
+  function depositETHAndBorrow(uint256 _borrowAmount) external payable;
+
   function withdraw(uint256 _vaultId, uint256 _amount) external;
 
-  function withdrawAll(uint256 _vaultId) external;
+  function withdrawETH(uint256 _vaultId, uint256 _amount) external;
 
   function borrow(uint256 _vaultId, uint256 _amount) external;
 
@@ -42,21 +51,22 @@ interface IVaultsCore {
 
   function liquidate(uint256 _vaultId) external;
 
-  //Read only
+  function liquidatePartial(uint256 _vaultId, uint256 _amount) external;
 
-  function availableIncome() external view returns (uint256);
+  function upgrade(address payable _newVaultsCore) external;
+
+  function acceptUpgrade(address payable _oldVaultsCore) external;
+
+  function setDebtNotifier(IDebtNotifier _debtNotifier) external;
+
+  //Read only
+  function a() external view returns (IAddressProvider);
+
+  function WETH() external view returns (IWETH);
+
+  function debtNotifier() external view returns (IDebtNotifier);
+
+  function state() external view returns (IVaultsCoreState);
 
   function cumulativeRates(address _collateralType) external view returns (uint256);
-
-  function lastRefresh(address _collateralType) external view returns (uint256);
-
-  //Refresh
-  function initializeRates(address _collateralType) external;
-
-  function refresh() external;
-
-  function refreshCollateral(address collateralType) external;
-
-  //upgrade
-  function upgrade(address _newVaultsCore) external;
 }

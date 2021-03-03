@@ -84,9 +84,16 @@ contract VaultsDataProvider is IVaultsDataProvider {
 
   /**
     Get a vault by vault ID.
-    @param _id The vault's ID to be retrieved 
+    @param _id The vault's ID to be retrieved
+    @return struct Vault {
+      address collateralType;
+      address owner;
+      uint256 collateralBalance;
+      uint256 baseDebt;
+      uint256 createdAt;
+    }
   */
-  function vaults(uint256 _id) public override view returns (Vault memory) {
+  function vaults(uint256 _id) public view override returns (Vault memory) {
     Vault memory v = _vaults[_id];
     return v;
   }
@@ -96,7 +103,7 @@ contract VaultsDataProvider is IVaultsDataProvider {
     @param _id the ID of the vault
     @return owner of the vault
   */
-  function vaultOwner(uint256 _id) public override view returns (address) {
+  function vaultOwner(uint256 _id) public view override returns (address) {
     return _vaults[_id].owner;
   }
 
@@ -105,7 +112,7 @@ contract VaultsDataProvider is IVaultsDataProvider {
     @param _id the ID of the vault
     @return address for the collateral type of the vault
   */
-  function vaultCollateralType(uint256 _id) public override view returns (address) {
+  function vaultCollateralType(uint256 _id) public view override returns (address) {
     return _vaults[_id].collateralType;
   }
 
@@ -114,7 +121,7 @@ contract VaultsDataProvider is IVaultsDataProvider {
     @param _id the ID of the vault
     @return collateral balance of the vault
   */
-  function vaultCollateralBalance(uint256 _id) public override view returns (uint256) {
+  function vaultCollateralBalance(uint256 _id) public view override returns (uint256) {
     return _vaults[_id].collateralBalance;
   }
 
@@ -123,7 +130,7 @@ contract VaultsDataProvider is IVaultsDataProvider {
     @param _id the ID of the vault
     @return base debt of the vault
   */
-  function vaultBaseDebt(uint256 _id) public override view returns (uint256) {
+  function vaultBaseDebt(uint256 _id) public view override returns (uint256) {
     return _vaults[_id].baseDebt;
   }
 
@@ -134,7 +141,7 @@ contract VaultsDataProvider is IVaultsDataProvider {
     @param _owner address of the owner of the vault
     @return vault id of the vault or 0
   */
-  function vaultId(address _collateralType, address _owner) public override view returns (uint256) {
+  function vaultId(address _collateralType, address _owner) public view override returns (uint256) {
     return _vaultOwners[_owner][_collateralType];
   }
 
@@ -143,7 +150,7 @@ contract VaultsDataProvider is IVaultsDataProvider {
     @param _id the ID of the vault
     @return boolean if the vault exists
   */
-  function vaultExists(uint256 _id) public override view returns (bool) {
+  function vaultExists(uint256 _id) public view override returns (bool) {
     Vault memory v = _vaults[_id];
     return v.collateralType != address(0);
   }
@@ -154,7 +161,7 @@ contract VaultsDataProvider is IVaultsDataProvider {
     to make sure it's up to date.
     @return total debt of the platform
   */
-  function debt() public override view returns (uint256) {
+  function debt() public view override returns (uint256) {
     uint256 total = 0;
     for (uint256 i = 1; i <= a.config().numCollateralConfigs(); i++) {
       address collateralType = a.config().collateralConfigs(i).collateralType;
@@ -166,27 +173,23 @@ contract VaultsDataProvider is IVaultsDataProvider {
   /**
     Calculated the total outstanding debt for all vaults of a specific collateral type.
     @dev uses the existing cumulative rate. Call `refreshCollateral()` on `VaultsCore`
-    to make sure it's up to date.    
+    to make sure it's up to date.
     @param _collateralType address of the collateral type (Eg: WETH)
     @return total debt of the platform of one collateral type
   */
-  function collateralDebt(address _collateralType) public override view returns (uint256) {
-    return
-      a.ratesManager().calculateDebt(
-        a.vaultsData().baseDebt(_collateralType),
-        a.core().cumulativeRates(_collateralType)
-      );
+  function collateralDebt(address _collateralType) public view override returns (uint256) {
+    return a.ratesManager().calculateDebt(baseDebt[_collateralType], a.core().cumulativeRates(_collateralType));
   }
 
   /**
     Calculated the total outstanding debt for a specific vault.
     @dev uses the existing cumulative rate. Call `refreshCollateral()` on `VaultsCore`
-    to make sure it's up to date.    
+    to make sure it's up to date.
     @param _vaultId the ID of the vault
     @return total debt of one vault
   */
-  function vaultDebt(uint256 _vaultId) public override view returns (uint256) {
-    IVaultsDataProvider.Vault memory v = a.vaultsData().vaults(_vaultId);
+  function vaultDebt(uint256 _vaultId) public view override returns (uint256) {
+    IVaultsDataProvider.Vault memory v = _vaults[_vaultId];
     return a.ratesManager().calculateDebt(v.baseDebt, a.core().cumulativeRates(v.collateralType));
   }
 }

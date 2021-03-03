@@ -1,0 +1,70 @@
+{
+  "name": "parallel",
+  "version": "1.0.0",
+  "main": "index.js",
+  "engines": {
+    "node": "12.x"
+  },
+  "scripts": {
+    "compile": "truffle compile && yarn generate-types && tsc",
+    "generate-types": "typechain --target=truffle-v5 'build/contracts/*.json'",
+    "postinstall": "truffle compile && yarn generate-types",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf build/ && rm -rf types/",
+    "lint": "yarn lint:sol && yarn lint:js",
+    "lint:sol": "./node_modules/solhint/solhint.js contracts/**/*.sol",
+    "lint:js": "xo",
+    "coverage": "yarn compile && truffle run coverage --file=\"./build/test/**/*.js\"",
+    "test": "yarn clean && yarn compile && truffle test ./build/test/** ./build/test/**/**",
+    "test:file": "yarn clean && yarn compile && truffle test",
+    "test:liquidityMining": "yarn clean && yarn compile && truffle test ./build/test/liquidityMining/**",
+    "test:governance": "yarn clean && yarn compile && truffle test ./build/test/governance/**",
+    "retest:governance": "yarn tsc && truffle test ./build/test/governance/**",
+    "xo-fix": "xo --fix",
+    "prettier": "./node_modules/.bin/prettier --write ./test/**",
+    "prettier:solidity": "./node_modules/.bin/prettier --write contracts/**/*.sol"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "devDependencies": {
+    "@openzeppelin/test-helpers": "^0.5.6",
+    "@typechain/truffle-v5": "^2.0.2",
+    "@types/bn.js": "^4.11.6",
+    "@types/chai": "^4.2.12",
+    "@types/mocha": "^8.0.2",
+    "@types/underscore": "^1.10.22",
+    "@types/web3": "^1.2.2",
+    "abi-decoder": "^2.3.0",
+    "eslint-config-xo-typescript": "^0.37.0",
+    "eslint-plugin-prettier": "^3.3.1",
+    "eth-gas-reporter": "^0.2.17",
+    "ethers": "^5.0.31",
+    "husky": "^4.3.8",
+    "lint-staged": "^10.5.3",
+    "moment": "^2.29.1",
+    "prettier": "^2.1.1",
+    "prettier-plugin-solidity": "^1.0.0-alpha.57",
+    "solhint": "^3.2.0",
+    "solhint-plugin-prettier": "^0.0.5",
+    "solidity-coverage": "^0.7.9",
+    "truffle": "^5.1.39",
+    "truffle-contract-size": "^2.0.0",
+    "typechain": "^2.0.0",
+    "typescript": "^3.9.7",
+    "underscore": "^1.10.2",
+    "xo": "^0.37.1"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^3.1.0",
+    "@truffle/hdwallet-provider": "^1.0.44",
+    "chai": "^4.2.0",
+    "dotenv": "^8.2.0",
+    "truffle-plugin-verify": "^0.4.0",
+    "web3": "^1.2.11",
+    "web3-eth-contract": "^1.2.11",
+    "yargs": "^16.2.0"
+  }
+}
