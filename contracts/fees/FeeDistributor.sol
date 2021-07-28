@@ -10,10 +10,7 @@ import "../interfaces/ISTABLEX.sol";
 import "../interfaces/IFeeDistributor.sol";
 import "../interfaces/IAddressProvider.sol";
 
-contract FeeDistributor is
-  IFeeDistributor,
-  ReentrancyGuard
-{
+contract FeeDistributor is IFeeDistributor, ReentrancyGuard {
   using SafeMath for uint256;
 
   event PayeeAdded(address account, uint256 shares);
@@ -41,7 +38,7 @@ contract FeeDistributor is
     @dev anyone can call this.
   */
   function release() public override nonReentrant {
-    uint256 income = a.core().availableIncome();
+    uint256 income = a.core().state().availableIncome();
     require(income > 0, "income is 0");
     require(payees.length > 0, "Payees not configured yet");
     lastReleasedAt = now;
@@ -55,10 +52,36 @@ contract FeeDistributor is
   }
 
   /**
+    Updates the payee configuration to a new one.
+    @dev will release existing fees before the update.
+    @param _payees Array of payees
+    @param _shares Array of shares for each payee
+  */
+  function changePayees(address[] memory _payees, uint256[] memory _shares) public override onlyManager {
+    require(_payees.length == _shares.length, "Payees and shares mismatched");
+    require(_payees.length > 0, "No payees");
+
+    uint256 income = a.core().state().availableIncome();
+    if (income > 0 && payees.length > 0) {
+      release();
+    }
+
+    for (uint256 i = 0; i < payees.length; i++) {
+      delete shares[payees[i]];
+    }
+    delete payees;
+    totalShares = 0;
+
+    for (uint256 i = 0; i < _payees.length; i++) {
+      _addPayee(_payees[i], _shares[i]);
+    }
+  }
+
+  /**
     Get current configured payees.
     @return array of current payees.
   */
-  function getPayees() public override view returns (address[] memory) {
+  function getPayees() public view override returns (address[] memory) {
     return payees;
   }
 
@@ -88,31 +111,5 @@ contract FeeDistributor is
     shares[_payee] = _shares;
     totalShares = totalShares.add(_shares);
     emit PayeeAdded(_payee, _shares);
-  }
-
-  /**
-    Updates the payee configuration to a new one.
-    @dev will release existing fees before the update.
-    @param _payees Array of payees
-    @param _shares Array of shares for each payee
-  */
-  function changePayees(address[] memory _payees, uint256[] memory _shares) public override onlyManager {
-    require(_payees.length == _shares.length, "Payees and shares mismatched");
-    require(_payees.length > 0, "No payees");
-
-    uint256 income = a.core().availableIncome();
-    if (income > 0 && payees.length > 0) {
-      release();
-    }
-
-    for (uint256 i = 0; i < payees.length; i++) {
-      delete shares[payees[i]];
-    }
-    delete payees;
-    totalShares = 0;
-
-    for (uint256 i = 0; i < _payees.length; i++) {
-      _addPayee(_payees[i], _shares[i]);
-    }
   }
 }

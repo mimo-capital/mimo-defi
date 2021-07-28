@@ -16,7 +16,6 @@ contract LiquidationManager is ILiquidationManager, ReentrancyGuard {
   IAddressProvider public override a;
 
   uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1e18; // 1
-  uint256 public constant FULL_LIQUIDIATION_TRESHOLD = 100e18; // 100 USDX, vaults below 100 USDX can be liquidated in full
 
   constructor(IAddressProvider _addresses) public {
     require(address(_addresses) != address(0));
@@ -25,45 +24,40 @@ contract LiquidationManager is ILiquidationManager, ReentrancyGuard {
 
   /**
     Check if the health factor is above or equal to 1.
-    @param _collateralType address of the collateral type
-    @param _collateralValue value of the collateral in stableX currency 
+    @param _collateralValue value of the collateral in PAR
     @param _vaultDebt outstanding debt to which the collateral balance shall be compared
+    @param _minRatio min ratio to calculate health factor
     @return boolean if the health factor is >= 1.
   */
   function isHealthy(
-    address _collateralType,
     uint256 _collateralValue,
-    uint256 _vaultDebt
-  ) public override view returns (bool) {
-    uint256 healthFactor = calculateHealthFactor(_collateralType, _collateralValue, _vaultDebt);
+    uint256 _vaultDebt,
+    uint256 _minRatio
+  ) public view override returns (bool) {
+    uint256 healthFactor = calculateHealthFactor(_collateralValue, _vaultDebt, _minRatio);
     return healthFactor >= HEALTH_FACTOR_LIQUIDATION_THRESHOLD;
   }
 
   /**
     Calculate the healthfactor of a debt balance
-    @param _collateralType address of the collateral type
-    @param _collateralValue value of the collateral in stableX currency 
+    @param _collateralValue value of the collateral in PAR currency
     @param _vaultDebt outstanding debt to which the collateral balance shall be compared
+    @param _minRatio min ratio to calculate health factor
     @return healthFactor
   */
   function calculateHealthFactor(
-    address _collateralType,
     uint256 _collateralValue,
-    uint256 _vaultDebt
-  ) public override view returns (uint256 healthFactor) {
+    uint256 _vaultDebt,
+    uint256 _minRatio
+  ) public view override returns (uint256 healthFactor) {
     if (_vaultDebt == 0) return WadRayMath.wad();
 
-    // CurrentCollateralizationRatio = deposited ETH in USD / debt in USD
+    // CurrentCollateralizationRatio = value(deposited ETH) / debt
     uint256 collateralizationRatio = _collateralValue.wadDiv(_vaultDebt);
 
     // Healthfactor = CurrentCollateralizationRatio / MinimumCollateralizationRatio
-
-    uint256 collateralId = a.config().collateralIds(_collateralType);
-    require(collateralId > 0, "collateral not supported");
-
-    uint256 minRatio = a.config().collateralConfigs(collateralId).minCollateralRatio;
-    if (minRatio > 0) {
-      return collateralizationRatio.wadDiv(minRatio);
+    if (_minRatio > 0) {
+      return collateralizationRatio.wadDiv(_minRatio);
     }
 
     return 1e18; // 1
@@ -71,19 +65,26 @@ contract LiquidationManager is ILiquidationManager, ReentrancyGuard {
 
   /**
     Calculate the liquidation bonus for a specified amount
+    @param _collateralType address of the collateral type
     @param _amount amount for which the liquidation bonus shall be calculated
     @return bonus the liquidation bonus to pay out
   */
-  function liquidationBonus(uint256 _amount) public override view returns (uint256 bonus) {
-    return _amount.wadMul(a.config().liquidationBonus());
+  function liquidationBonus(address _collateralType, uint256 _amount) public view override returns (uint256 bonus) {
+    return _amount.wadMul(a.config().collateralLiquidationBonus(_collateralType));
   }
 
   /**
     Apply the liquidation bonus to a balance as a discount.
+    @param _collateralType address of the collateral type
     @param _amount the balance on which to apply to liquidation bonus as a discount.
     @return discountedAmount
   */
-  function applyLiquidationDiscount(uint256 _amount) public override view returns (uint256 discountedAmount) {
-    return _amount.wadDiv(a.config().liquidationBonus().add(WadRayMath.wad()));
+  function applyLiquidationDiscount(address _collateralType, uint256 _amount)
+    public
+    view
+    override
+    returns (uint256 discountedAmount)
+  {
+    return _amount.wadDiv(a.config().collateralLiquidationBonus(_collateralType).add(WadRayMath.wad()));
   }
 }
