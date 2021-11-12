@@ -3,12 +3,12 @@
 pragma experimental ABIEncoderV2;
 pragma solidity 0.6.12;
 
-import '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
-import { SafeERC20, IERC20 } from '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
-import { SafeMath } from '@openzeppelin/contracts/math/SafeMath.sol';
-import './interfaces/IVotingEscrow.sol';
-import './interfaces/IGovernanceAddressProvider.sol';
-import '../liquidityMining/interfaces/IGenericMiner.sol';
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
+import "./interfaces/IVotingEscrow.sol";
+import "./interfaces/IGovernanceAddressProvider.sol";
+import "../liquidityMining/interfaces/IGenericMiner.sol";
 
 /**
  * @title  VotingEscrow
@@ -58,13 +58,13 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard {
   }
 
   modifier onlyManager() {
-    require(a.controller().hasRole(a.controller().MANAGER_ROLE(), msg.sender), 'Caller is not a Manager');
+    require(a.controller().hasRole(a.controller().MANAGER_ROLE(), msg.sender), "Caller is not a Manager");
     _;
   }
 
   /** @dev Modifier to ensure contract has not yet expired */
   modifier contractNotExpired() {
-    require(!expired, 'Contract is expired');
+    require(!expired, "Contract is expired");
     _;
   }
 
@@ -76,10 +76,10 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard {
   function createLock(uint256 _value, uint256 _unlockTime) external override nonReentrant contractNotExpired {
     LockedBalance memory locked_ = LockedBalance({ amount: locked[msg.sender].amount, end: locked[msg.sender].end });
 
-    require(_value > 0, 'Must stake non zero amount');
-    require(locked_.amount == 0, 'Withdraw old tokens first');
-    require(_unlockTime > block.timestamp, 'Can only lock until time in the future');
-    require(_unlockTime.sub(block.timestamp) > minimumLockTime, 'Lock duration should be larger than minimum locktime');
+    require(_value > 0, "Must stake non zero amount");
+    require(locked_.amount == 0, "Withdraw old tokens first");
+    require(_unlockTime > block.timestamp, "Can only lock until time in the future");
+    require(_unlockTime.sub(block.timestamp) > minimumLockTime, "Lock duration should be larger than minimum locktime");
 
     _depositFor(msg.sender, _value, _unlockTime, locked_, LockAction.CREATE_LOCK);
   }
@@ -91,9 +91,9 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard {
   function increaseLockAmount(uint256 _value) external override nonReentrant contractNotExpired {
     LockedBalance memory locked_ = LockedBalance({ amount: locked[msg.sender].amount, end: locked[msg.sender].end });
 
-    require(_value > 0, 'Must stake non zero amount');
-    require(locked_.amount > 0, 'No existing lock found');
-    require(locked_.end > block.timestamp, 'Cannot add to expired lock. Withdraw');
+    require(_value > 0, "Must stake non zero amount");
+    require(locked_.amount > 0, "No existing lock found");
+    require(locked_.end > block.timestamp, "Cannot add to expired lock. Withdraw");
 
     _depositFor(msg.sender, _value, 0, locked_, LockAction.INCREASE_LOCK_AMOUNT);
   }
@@ -105,10 +105,10 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard {
   function increaseLockLength(uint256 _unlockTime) external override nonReentrant contractNotExpired {
     LockedBalance memory locked_ = LockedBalance({ amount: locked[msg.sender].amount, end: locked[msg.sender].end });
 
-    require(locked_.amount > 0, 'Nothing is locked');
-    require(locked_.end > block.timestamp, 'Lock expired');
-    require(_unlockTime > locked_.end, 'Can only increase lock time');
-    require(_unlockTime.sub(locked_.end) > minimumLockTime, 'Lock duration should be larger than minimum locktime');
+    require(locked_.amount > 0, "Nothing is locked");
+    require(locked_.end > block.timestamp, "Lock expired");
+    require(_unlockTime > locked_.end, "Can only increase lock time");
+    require(_unlockTime.sub(locked_.end) > minimumLockTime, "Lock duration should be larger than minimum locktime");
 
     _depositFor(msg.sender, 0, _unlockTime, locked_, LockAction.INCREASE_LOCK_TIME);
   }
@@ -165,7 +165,7 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard {
    * @return uint256 Balance of user
    */
   function balanceOfAt(address _owner, uint256 _blockTime) public view override returns (uint256) {
-    require(_blockTime >= block.timestamp, 'Must pass block timestamp in the future');
+    require(_blockTime >= block.timestamp, "Must pass block timestamp in the future");
 
     LockedBalance memory currentLock = locked[_owner];
 
@@ -218,7 +218,7 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard {
   function _withdraw(address _addr) internal nonReentrant {
     LockedBalance memory oldLock = LockedBalance({ end: locked[_addr].end, amount: locked[_addr].amount });
     require(block.timestamp >= oldLock.end || expired, "The lock didn't expire");
-    require(oldLock.amount > 0, 'Must have something to withdraw');
+    require(oldLock.amount > 0, "Must have something to withdraw");
 
     uint256 value = uint256(oldLock.amount);
 

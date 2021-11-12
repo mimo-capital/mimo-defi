@@ -5,20 +5,20 @@ import {
   EthereumDistributorInstance,
   DistributorManagerInstance,
   GovernanceAddressProviderInstance,
-} from '../../types/truffle-contracts';
-import { setupMIMO } from '../utils/helpers';
+} from "../../types/truffle-contracts";
+import { setupMIMO } from "../utils/helpers";
 
-const { BN, time } = require('@openzeppelin/test-helpers');
+const { BN, time } = require("@openzeppelin/test-helpers");
 
-const MIMODistributor = artifacts.require('MIMODistributor');
-const EthereumDistributor = artifacts.require('EthereumDistributor');
-const DistributorManager = artifacts.require('DistributorManager');
+const MIMODistributor = artifacts.require("MIMODistributor");
+const EthereumDistributor = artifacts.require("EthereumDistributor");
+const DistributorManager = artifacts.require("DistributorManager");
 
-const AccessController = artifacts.require('AccessController');
-const AddressProvider = artifacts.require('AddressProvider');
-const GovernanceAddressProvider = artifacts.require('GovernanceAddressProvider');
+const AccessController = artifacts.require("AccessController");
+const AddressProvider = artifacts.require("AddressProvider");
+const GovernanceAddressProvider = artifacts.require("GovernanceAddressProvider");
 
-const WEEK_SECONDS = new BN('604800');
+const WEEK_SECONDS = new BN("604800");
 
 let a: GovernanceAddressProviderInstance;
 let controller: AccessControllerInstance;
@@ -27,7 +27,7 @@ let ethereumDistributor: EthereumDistributorInstance;
 let distributorManager: DistributorManagerInstance;
 let mimo: MIMOInstance;
 
-contract('DistributorManager', (accounts) => {
+contract("DistributorManager", (accounts) => {
   const [owner, A] = accounts;
 
   beforeEach(async () => {
@@ -47,7 +47,7 @@ contract('DistributorManager', (accounts) => {
     await ethereumDistributor.changePayees([A], [100]);
   });
 
-  it('should be able to trigger release on all distributors', async () => {
+  it("should be able to trigger release on all distributors", async () => {
     const start = await mimoDistributor.startTime();
     await time.increaseTo(start.add(WEEK_SECONDS));
 

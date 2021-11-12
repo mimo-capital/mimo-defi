@@ -3,10 +3,10 @@
 pragma experimental ABIEncoderV2;
 pragma solidity 0.6.12;
 
-import './GenericMiner.sol';
-import './interfaces/IVotingMiner.sol';
-import '../governance/interfaces/IGovernanceAddressProvider.sol';
-import '../governance/interfaces/IVotingEscrow.sol';
+import "./GenericMiner.sol";
+import "./interfaces/IVotingMiner.sol";
+import "../governance/interfaces/IGovernanceAddressProvider.sol";
+import "../governance/interfaces/IVotingEscrow.sol";
 
 contract VotingMiner is IVotingMiner, GenericMiner {
   constructor(IGovernanceAddressProvider _addresses) public GenericMiner(_addresses) {}

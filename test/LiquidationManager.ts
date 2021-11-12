@@ -1,7 +1,7 @@
-import { LiquidationManagerInstance, MockWETHInstance } from '../types/truffle-contracts';
-import { constants, basicSetup } from './utils/helpers';
+import { LiquidationManagerInstance, MockWETHInstance } from "../types/truffle-contracts";
+import { constants, basicSetup } from "./utils/helpers";
 
-contract('Liquidation Manager', (accounts) => {
+contract("Liquidation Manager", (accounts) => {
   const [,] = accounts;
 
   let c: {
@@ -13,62 +13,62 @@ contract('Liquidation Manager', (accounts) => {
     c = await basicSetup({});
   });
 
-  it('should calculate the correct health factor & isHealthy', async () => {
+  it("should calculate the correct health factor & isHealthy", async () => {
     const tests = [
       {
         value: 100,
         debt: 100,
         ratio: constants.MIN_LIQUIDATION_RATIO,
-        health: '666666666666666667',
+        health: "666666666666666667",
         isHealthy: false,
       },
       {
         value: 150,
         debt: 100,
         ratio: constants.MIN_LIQUIDATION_RATIO,
-        health: '1000000000000000000',
+        health: "1000000000000000000",
         isHealthy: true,
       },
       {
         value: 150,
         debt: 200,
         ratio: constants.MIN_LIQUIDATION_RATIO,
-        health: '500000000000000000',
+        health: "500000000000000000",
         isHealthy: false,
       },
       {
         value: 150,
         debt: 1,
         ratio: constants.MIN_LIQUIDATION_RATIO,
-        health: '100000000000000000000',
+        health: "100000000000000000000",
         isHealthy: true,
       },
       {
         value: 1,
         debt: 0, // 0 debt should give a health of 1
         ratio: constants.MIN_LIQUIDATION_RATIO,
-        health: '1000000000000000000',
+        health: "1000000000000000000",
         isHealthy: true,
       },
       {
         value: 150,
         debt: 1,
         ratio: 0,
-        health: '1000000000000000000',
+        health: "1000000000000000000",
         isHealthy: true,
       },
       {
         value: 160,
         debt: 1,
         ratio: constants.MIN_COLLATERAL_RATIO,
-        health: '100000000000000000000',
+        health: "100000000000000000000",
         isHealthy: true,
       },
       {
         value: 160,
         debt: 100,
         ratio: constants.MIN_COLLATERAL_RATIO,
-        health: '1000000000000000000',
+        health: "1000000000000000000",
         isHealthy: true,
       },
     ];
@@ -82,17 +82,17 @@ contract('Liquidation Manager', (accounts) => {
     }
   });
 
-  it('calculate a correct liquidation bonus', async () => {
+  it("calculate a correct liquidation bonus", async () => {
     const amount = 100;
     const liquidationBonus = await c.liquidator.liquidationBonus(c.weth.address, amount);
 
-    assert.equal(liquidationBonus.toString(), '5');
+    assert.equal(liquidationBonus.toString(), "5");
   });
 
-  it('calculate a correct applyLiquidationDiscount', async () => {
+  it("calculate a correct applyLiquidationDiscount", async () => {
     const amount = 105;
     const liquidationBonus = await c.liquidator.applyLiquidationDiscount(c.weth.address, amount);
 
-    assert.equal(liquidationBonus.toString(), '100');
+    assert.equal(liquidationBonus.toString(), "100");
   });
 });

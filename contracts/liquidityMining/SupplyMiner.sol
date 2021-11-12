@@ -3,10 +3,10 @@
 pragma experimental ABIEncoderV2;
 pragma solidity 0.6.12;
 
-import '@openzeppelin/contracts/math/SafeMath.sol';
-import './GenericMiner.sol';
-import './interfaces/ISupplyMiner.sol';
-import '../governance/interfaces/IGovernanceAddressProvider.sol';
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "./GenericMiner.sol";
+import "./interfaces/ISupplyMiner.sol";
+import "../governance/interfaces/IGovernanceAddressProvider.sol";
 
 contract SupplyMiner is ISupplyMiner, GenericMiner {
   using SafeMath for uint256;
@@ -14,7 +14,7 @@ contract SupplyMiner is ISupplyMiner, GenericMiner {
   constructor(IGovernanceAddressProvider _addresses) public GenericMiner(_addresses) {}
 
   modifier onlyNotifier() {
-    require(msg.sender == address(a.debtNotifier()), 'Caller is not DebtNotifier');
+    require(msg.sender == address(a.debtNotifier()), "Caller is not DebtNotifier");
     _;
   }
 

@@ -3,10 +3,10 @@
 pragma experimental ABIEncoderV2;
 pragma solidity 0.6.12;
 
-import '@openzeppelin/contracts/math/SafeMath.sol';
-import '../libraries/WadRayMath.sol';
-import '../governance/interfaces/IGovernanceAddressProvider.sol';
-import './interfaces/IBaseDistributor.sol';
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "../libraries/WadRayMath.sol";
+import "../governance/interfaces/IGovernanceAddressProvider.sol";
+import "./interfaces/IBaseDistributor.sol";
 
 /*
   	Distribution Formula:
@@ -28,7 +28,7 @@ abstract contract BaseDistributor is IBaseDistributor {
   IGovernanceAddressProvider public override a;
 
   modifier onlyManager() {
-    require(a.controller().hasRole(a.controller().MANAGER_ROLE(), msg.sender), 'Caller is not Manager');
+    require(a.controller().hasRole(a.controller().MANAGER_ROLE(), msg.sender), "Caller is not Manager");
     _;
   }
 
@@ -38,8 +38,8 @@ abstract contract BaseDistributor is IBaseDistributor {
   */
   function release() public override {
     uint256 newTokens = mintableTokens();
-    require(newTokens > 0, 'newTokens is 0');
-    require(payees.length > 0, 'Payees not configured yet');
+    require(newTokens > 0, "newTokens is 0");
+    require(payees.length > 0, "Payees not configured yet");
     // Mint MIMO to all receivers
     for (uint256 i = 0; i < payees.length; i++) {
       address payee = payees[i];
@@ -55,8 +55,8 @@ abstract contract BaseDistributor is IBaseDistributor {
     @param _shares Array of shares for each payee
   */
   function changePayees(address[] memory _payees, uint256[] memory _shares) public override onlyManager {
-    require(_payees.length == _shares.length, 'Payees and shares mismatched');
-    require(_payees.length > 0, 'No payees');
+    require(_payees.length == _shares.length, "Payees and shares mismatched");
+    require(_payees.length > 0, "No payees");
 
     if (payees.length > 0 && mintableTokens() > 0) {
       release();
@@ -102,9 +102,9 @@ abstract contract BaseDistributor is IBaseDistributor {
     @param _shares The number of shares owned by the payee.
   */
   function _addPayee(address _payee, uint256 _shares) internal {
-    require(_payee != address(0), 'payee is the zero address');
-    require(_shares > 0, 'shares are 0');
-    require(shares[_payee] == 0, 'payee already has shares');
+    require(_payee != address(0), "payee is the zero address");
+    require(_shares > 0, "shares are 0");
+    require(shares[_payee] == 0, "payee already has shares");
 
     payees.push(_payee);
     shares[_payee] = _shares;

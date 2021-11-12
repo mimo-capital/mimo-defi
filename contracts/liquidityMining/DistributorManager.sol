@@ -3,9 +3,9 @@
 pragma experimental ABIEncoderV2;
 pragma solidity 0.6.12;
 
-import '@openzeppelin/contracts/math/SafeMath.sol';
-import '../governance/interfaces/IGovernanceAddressProvider.sol';
-import './interfaces/IBaseDistributor.sol';
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "../governance/interfaces/IGovernanceAddressProvider.sol";
+import "./interfaces/IBaseDistributor.sol";
 
 contract DistributorManager {
   using SafeMath for uint256;
@@ -14,7 +14,7 @@ contract DistributorManager {
   IBaseDistributor public mimmoDistributor;
 
   modifier onlyManager() {
-    require(a.controller().hasRole(a.controller().MANAGER_ROLE(), msg.sender), 'Caller is not Manager');
+    require(a.controller().hasRole(a.controller().MANAGER_ROLE(), msg.sender), "Caller is not Manager");
     _;
   }
 

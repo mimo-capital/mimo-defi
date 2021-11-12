@@ -3,25 +3,25 @@ import {
   MIMOInstance,
   EthereumDistributorInstance,
   GovernanceAddressProviderInstance,
-} from '../../types/truffle-contracts';
-import { setupMIMO } from '../utils/helpers';
+} from "../../types/truffle-contracts";
+import { setupMIMO } from "../utils/helpers";
 
-const { BN } = require('@openzeppelin/test-helpers');
+const { BN } = require("@openzeppelin/test-helpers");
 
-const EthereumDistributor = artifacts.require('EthereumDistributor');
+const EthereumDistributor = artifacts.require("EthereumDistributor");
 
-const AccessController = artifacts.require('AccessController');
-const AddressProvider = artifacts.require('AddressProvider');
-const GovernanceAddressProvider = artifacts.require('GovernanceAddressProvider');
+const AccessController = artifacts.require("AccessController");
+const AddressProvider = artifacts.require("AddressProvider");
+const GovernanceAddressProvider = artifacts.require("GovernanceAddressProvider");
 
-const WAD = new BN('1000000000000000000'); // 1e18
+const WAD = new BN("1000000000000000000"); // 1e18
 
 let a: GovernanceAddressProviderInstance;
 let controller: AccessControllerInstance;
 let ethereumDistributor: EthereumDistributorInstance;
 let mimo: MIMOInstance;
 
-contract('EthereumDistributor', (accounts) => {
+contract("EthereumDistributor", (accounts) => {
   const [owner, A, B] = accounts;
   const PAYEES = [A, B];
   const SHARES = [20, 80];
@@ -39,7 +39,7 @@ contract('EthereumDistributor', (accounts) => {
     await ethereumDistributor.changePayees(PAYEES, SHARES);
   });
 
-  it('should be able to release tokens to payees', async () => {
+  it("should be able to release tokens to payees", async () => {
     const totalTokens = WAD.muln(10);
 
     await mimo.mint(ethereumDistributor.address, totalTokens);

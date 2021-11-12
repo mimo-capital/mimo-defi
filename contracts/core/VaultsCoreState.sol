@@ -3,13 +3,13 @@
 pragma experimental ABIEncoderV2;
 pragma solidity 0.6.12;
 
-import '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
-import '@openzeppelin/contracts/math/SafeMath.sol';
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
-import '../libraries/WadRayMath.sol';
-import '../interfaces/IAddressProvider.sol';
-import '../interfaces/IVaultsCoreState.sol';
-import '../v1/interfaces/IVaultsCoreV1.sol';
+import "../libraries/WadRayMath.sol";
+import "../interfaces/IAddressProvider.sol";
+import "../interfaces/IVaultsCoreState.sol";
+import "../v1/interfaces/IVaultsCoreV1.sol";
 
 contract VaultsCoreState is IVaultsCoreState {
   using SafeMath for uint256;

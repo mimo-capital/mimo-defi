@@ -1,4 +1,4 @@
-const { BN } = require('@openzeppelin/test-helpers');
+const { BN } = require("@openzeppelin/test-helpers");
 
 export type Proposal = {
   targets: string[];
@@ -13,13 +13,13 @@ export function buildTestProposal(escrowAddress: string, proposerAddress: string
   const values = [];
   const signatures = [];
   const calldatas = [];
-  const description = 'do nothing';
+  const description = "do nothing";
 
   for (let i = 0; i < actionCount; i++) {
     targets.push(escrowAddress);
-    values.push('0');
-    signatures.push('balanceOf(address)');
-    calldatas.push(encodeParameters(['address'], [proposerAddress]));
+    values.push("0");
+    signatures.push("balanceOf(address)");
+    calldatas.push(encodeParameters(["address"], [proposerAddress]));
   }
 
   return {
@@ -40,12 +40,12 @@ export function buildMultiProposal(tokenAddress: string, amount: BN, recipients:
   const splitAmount: string = amount.div(new BN(recipients.length)).toString();
   for (const recipient of recipients) {
     targets.push(tokenAddress);
-    values.push('0');
-    signatures.push('transfer(address,uint256)');
-    calldatas.push(encodeParameters(['address', 'uint256'], [recipient, splitAmount]));
+    values.push("0");
+    signatures.push("transfer(address,uint256)");
+    calldatas.push(encodeParameters(["address", "uint256"], [recipient, splitAmount]));
   }
 
-  const description = 'Transfer tokens to multiple recipients';
+  const description = "Transfer tokens to multiple recipients";
   return {
     targets,
     values,

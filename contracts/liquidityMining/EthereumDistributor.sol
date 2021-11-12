@@ -3,10 +3,10 @@
 pragma experimental ABIEncoderV2;
 pragma solidity 0.6.12;
 
-import '@openzeppelin/contracts/math/SafeMath.sol';
-import { SafeERC20, IERC20 } from '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
-import '../governance/interfaces/IGovernanceAddressProvider.sol';
-import './BaseDistributor.sol';
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "../governance/interfaces/IGovernanceAddressProvider.sol";
+import "./BaseDistributor.sol";
 
 contract EthereumDistributor is BaseDistributor {
   using SafeMath for uint256;

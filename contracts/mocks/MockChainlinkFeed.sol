@@ -2,8 +2,8 @@
 
 pragma solidity 0.6.12;
 
-import '@openzeppelin/contracts/access/Ownable.sol';
-import '../chainlink/AggregatorV3Interface.sol';
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "../chainlink/AggregatorV3Interface.sol";
 
 contract MockChainlinkFeed is AggregatorV3Interface, Ownable {
   uint256 private _latestPrice;

@@ -1,4 +1,4 @@
-const { BN, time } = require('@openzeppelin/test-helpers');
+const { BN, time } = require("@openzeppelin/test-helpers");
 
 import {
   VaultsCoreInstance,
@@ -6,41 +6,41 @@ import {
   MockWETHInstance,
   ConfigProviderInstance,
   AccessControllerInstance,
-} from '../../types/truffle-contracts';
+} from "../../types/truffle-contracts";
 
-const PAR = artifacts.require('PAR');
-const AccessController = artifacts.require('AccessController');
-const AddressProvider = artifacts.require('AddressProvider');
-const ConfigProvider = artifacts.require('ConfigProvider');
-const VaultsCore = artifacts.require('VaultsCore');
-const VaultsCoreState = artifacts.require('VaultsCoreState');
-const VaultsDataProvider = artifacts.require('VaultsDataProvider');
-const RatesManager = artifacts.require('RatesManager');
-const LiquidationManager = artifacts.require('LiquidationManager');
-const WETH = artifacts.require('MockWETH');
-const PriceFeed = artifacts.require('PriceFeed');
-const MockChainlinkAggregator = artifacts.require('MockChainlinkAggregator');
-const FeeDistributor = artifacts.require('FeeDistributor');
-const DebtNotifier = artifacts.require('DebtNotifier');
-const GovernanceAddressProvider = artifacts.require('GovernanceAddressProvider');
-const MIMO = artifacts.require('MIMO');
+const PAR = artifacts.require("PAR");
+const AccessController = artifacts.require("AccessController");
+const AddressProvider = artifacts.require("AddressProvider");
+const ConfigProvider = artifacts.require("ConfigProvider");
+const VaultsCore = artifacts.require("VaultsCore");
+const VaultsCoreState = artifacts.require("VaultsCoreState");
+const VaultsDataProvider = artifacts.require("VaultsDataProvider");
+const RatesManager = artifacts.require("RatesManager");
+const LiquidationManager = artifacts.require("LiquidationManager");
+const WETH = artifacts.require("MockWETH");
+const PriceFeed = artifacts.require("PriceFeed");
+const MockChainlinkAggregator = artifacts.require("MockChainlinkAggregator");
+const FeeDistributor = artifacts.require("FeeDistributor");
+const DebtNotifier = artifacts.require("DebtNotifier");
+const GovernanceAddressProvider = artifacts.require("GovernanceAddressProvider");
+const MIMO = artifacts.require("MIMO");
 
-const DEFAULT_ADMIN_ROLE = '0x0000000000000000000000000000000000000000000000000000000000000000';
-const MIMO_MINTER_ROLE = web3.utils.keccak256('MIMO_MINTER_ROLE');
+const DEFAULT_ADMIN_ROLE = "0x0000000000000000000000000000000000000000000000000000000000000000";
+const MIMO_MINTER_ROLE = web3.utils.keccak256("MIMO_MINTER_ROLE");
 
 const AMOUNT_ACCURACY = new BN(String(1e18));
-const RATE_ACCURACY = new BN('1000000000000000000000000000'); // 1e27
+const RATE_ACCURACY = new BN("1000000000000000000000000000"); // 1e27
 const PRICE_ACCURACY = new BN(String(1e8));
-const DEBT_LIMIT = AMOUNT_ACCURACY.mul(new BN('10000')); // 10k USDX
+const DEBT_LIMIT = AMOUNT_ACCURACY.mul(new BN("10000")); // 10k USDX
 const MIN_LIQUIDATION_RATIO = new BN(String(15e17)); // 1.5 = 150%
 const MIN_COLLATERAL_RATIO = new BN(String(16e17)); // 1.6 = 160%
 const RATE_0BPS = RATE_ACCURACY; // Initial rate is 1 -> 0%
-const RATE_50BPS = new BN('1000000000158153903837946258');
-const RATE_150BPS = new BN('1000000000472114805215157979');
+const RATE_50BPS = new BN("1000000000158153903837946258");
+const RATE_150BPS = new BN("1000000000472114805215157979");
 const RATE_2PCT = new BN(String(2e16)); // 2%
-const ORIGINATION_FEE = new BN('0');
+const ORIGINATION_FEE = new BN("0");
 const LIQUIDATION_BONUS = new BN(String(5e16)); // 5%
-const LIQUIDATION_FEE = new BN('0');
+const LIQUIDATION_FEE = new BN("0");
 const EUR_PRICE = PRICE_ACCURACY; // 1 EUR = 1 USD
 const WETH_PRICE = PRICE_ACCURACY.muln(300); // 300 USD
 
@@ -125,8 +125,8 @@ async function deployAll() {
   const lmAddresses = await GovernanceAddressProvider.new(a.address);
   const debtNotifier = await DebtNotifier.new(lmAddresses.address);
   const par = await PAR.new(a.address);
-  const aggregator = await MockChainlinkAggregator.new(8, WETH_PRICE, 'ETH / USD');
-  const aggregatorEUR = await MockChainlinkAggregator.new(8, EUR_PRICE, 'EUR / USD');
+  const aggregator = await MockChainlinkAggregator.new(8, WETH_PRICE, "ETH / USD");
+  const aggregatorEUR = await MockChainlinkAggregator.new(8, EUR_PRICE, "EUR / USD");
   const feed = await PriceFeed.new(a.address);
   const vaultsData = await VaultsDataProvider.new(a.address);
 

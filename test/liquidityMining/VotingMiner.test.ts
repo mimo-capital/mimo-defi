@@ -5,25 +5,25 @@ import {
   AddressProviderInstance,
   VotingMinerInstance,
   MIMOInstance,
-} from '../../types/truffle-contracts';
-import { setupMIMO } from '../utils/helpers';
+} from "../../types/truffle-contracts";
+import { setupMIMO } from "../utils/helpers";
 
-const { BN, time } = require('@openzeppelin/test-helpers');
+const { BN, time } = require("@openzeppelin/test-helpers");
 
-const AccessController = artifacts.require('AccessController');
-const GovernanceAddressProvider = artifacts.require('GovernanceAddressProvider');
-const AddressProvider = artifacts.require('AddressProvider');
-const VotingEscrow = artifacts.require('VotingEscrow');
-const VotingMiner = artifacts.require('VotingMiner');
+const AccessController = artifacts.require("AccessController");
+const GovernanceAddressProvider = artifacts.require("GovernanceAddressProvider");
+const AddressProvider = artifacts.require("AddressProvider");
+const VotingEscrow = artifacts.require("VotingEscrow");
+const VotingMiner = artifacts.require("VotingMiner");
 
-const MINT_AMOUNT = new BN('1000000000000000000000'); // 1000 GOV
-const STAKE_AMOUNT = new BN('100000000000000000000'); // 100 GOV
+const MINT_AMOUNT = new BN("1000000000000000000000"); // 1000 GOV
+const STAKE_AMOUNT = new BN("100000000000000000000"); // 100 GOV
 const ONE_WEEK = time.duration.weeks(1);
 const ONE_MONTH = time.duration.weeks(4);
-const NAME = 'MIMO Voting Power';
-const SYMBOL = 'vMIMO';
+const NAME = "MIMO Voting Power";
+const SYMBOL = "vMIMO";
 
-contract('VotingMiner', (accounts) => {
+contract("VotingMiner", (accounts) => {
   const [owner, manager, voter, voter2] = accounts;
 
   let controller: AccessControllerInstance;
@@ -58,18 +58,18 @@ contract('VotingMiner', (accounts) => {
     startTime = await time.latest();
   });
 
-  it('initialized VotingMiner correctly', async () => {
+  it("initialized VotingMiner correctly", async () => {
     const balance = await mimo.balanceOf(miner.address);
-    assert.equal(balance.toString(), '0');
+    assert.equal(balance.toString(), "0");
 
     const totalStake = await miner.totalStake();
-    assert.equal(totalStake.toString(), '0');
+    assert.equal(totalStake.toString(), "0");
 
     const stake = await miner.stake(voter);
-    assert.equal(stake.toString(), '0');
+    assert.equal(stake.toString(), "0");
   });
 
-  it('stake should update correctly when creating lock', async () => {
+  it("stake should update correctly when creating lock", async () => {
     await escrow.createLock(STAKE_AMOUNT, startTime.add(ONE_WEEK), { from: voter });
 
     let totalStake = await miner.totalStake();
@@ -88,7 +88,7 @@ contract('VotingMiner', (accounts) => {
     assert.equal(votingPower2.toString(), stake2.toString());
   });
 
-  it('stake should update correctly when increase lock length', async () => {
+  it("stake should update correctly when increase lock length", async () => {
     const lockEnd = startTime.add(ONE_WEEK);
     await escrow.createLock(STAKE_AMOUNT, lockEnd, { from: voter });
     await escrow.increaseLockLength(startTime.add(ONE_WEEK.mul(new BN(2))), { from: voter });
@@ -101,7 +101,7 @@ contract('VotingMiner', (accounts) => {
     assert.equal(votingPower.toString(), totalStake.toString());
   });
 
-  it('stake should update correctly when increase lock amount', async () => {
+  it("stake should update correctly when increase lock amount", async () => {
     const lockEnd = startTime.add(ONE_WEEK);
     await escrow.createLock(STAKE_AMOUNT, lockEnd, { from: voter });
 
@@ -117,12 +117,12 @@ contract('VotingMiner', (accounts) => {
     assert.equal(votingPower.toString(), totalStake.toString());
   });
 
-  it('should releaseMIMO correctly', async () => {
+  it("should releaseMIMO correctly", async () => {
     await mimo.mint(miner.address, MINT_AMOUNT);
     await escrow.createLock(STAKE_AMOUNT, startTime.add(ONE_MONTH), { from: voter });
 
     let balance = await mimo.balanceOf(voter);
-    assert.equal(balance.toString(), '0');
+    assert.equal(balance.toString(), "0");
 
     await miner.releaseMIMO(voter, { from: voter });
     balance = await mimo.balanceOf(voter);
@@ -135,13 +135,13 @@ contract('VotingMiner', (accounts) => {
     await mimo.mint(miner.address, MINT_AMOUNT);
     await miner.releaseMIMO(voter, { from: voter });
     balance = await mimo.balanceOf(voter);
-    assert.equal(balance.div(new BN(1e15)).toString(), new BN('1500000000000000000000').div(new BN(1e15)).toString());
+    assert.equal(balance.div(new BN(1e15)).toString(), new BN("1500000000000000000000").div(new BN(1e15)).toString());
 
     await time.increaseTo(startTime.add(ONE_WEEK.muln(3)));
     await miner.releaseMIMO(voter, { from: voter });
     await mimo.mint(miner.address, MINT_AMOUNT);
     await miner.releaseMIMO(voter, { from: voter });
     balance = await mimo.balanceOf(voter);
-    assert.equal(balance.div(new BN(1e15)).toString(), '1700000');
+    assert.equal(balance.div(new BN(1e15)).toString(), "1700000");
   });
 });

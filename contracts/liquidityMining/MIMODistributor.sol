@@ -3,11 +3,11 @@
 pragma experimental ABIEncoderV2;
 pragma solidity 0.6.12;
 
-import '@openzeppelin/contracts/math/SafeMath.sol';
-import '../libraries/WadRayMath.sol';
-import '../governance/interfaces/IGovernanceAddressProvider.sol';
-import './interfaces/IMIMODistributor.sol';
-import './BaseDistributor.sol';
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "../libraries/WadRayMath.sol";
+import "../governance/interfaces/IGovernanceAddressProvider.sol";
+import "./interfaces/IMIMODistributor.sol";
+import "./BaseDistributor.sol";
 
 /*
   	Distribution Formula:

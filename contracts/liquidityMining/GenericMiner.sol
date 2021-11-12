@@ -2,9 +2,9 @@
 pragma experimental ABIEncoderV2;
 pragma solidity 0.6.12;
 
-import '@openzeppelin/contracts/math/SafeMath.sol';
-import '../libraries/WadRayMath.sol';
-import './interfaces/IGenericMiner.sol';
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "../libraries/WadRayMath.sol";
+import "./interfaces/IGenericMiner.sol";
 
 /*
     GenericMiner is based on ERC2917. https://github.com/gnufoo/ERC2917-Proposal
@@ -88,10 +88,10 @@ contract GenericMiner is IGenericMiner {
     @param value the amount by which the stake will be reduced
   */
   function _decreaseStake(address user, uint256 value) internal {
-    require(value > 0, 'STAKE_MUST_BE_GREATER_THAN_ZERO'); //TODO cleanup error message
+    require(value > 0, "STAKE_MUST_BE_GREATER_THAN_ZERO"); //TODO cleanup error message
 
     UserInfo storage userInfo = _users[user];
-    require(userInfo.stake >= value, 'INSUFFICIENT_STAKE_FOR_USER'); //TODO cleanup error message
+    require(userInfo.stake >= value, "INSUFFICIENT_STAKE_FOR_USER"); //TODO cleanup error message
     _refresh();
     uint256 pending = userInfo.stake.rayMul(_accAmountPerShare.sub(userInfo.accAmountPerShare));
     _balanceTracker = _balanceTracker.sub(pending);
@@ -110,7 +110,7 @@ contract GenericMiner is IGenericMiner {
     @param value the amount by which the stake will be increased
   */
   function _increaseStake(address user, uint256 value) internal {
-    require(value > 0, 'STAKE_MUST_BE_GREATER_THAN_ZERO'); //TODO cleanup error message
+    require(value > 0, "STAKE_MUST_BE_GREATER_THAN_ZERO"); //TODO cleanup error message
 
     UserInfo storage userInfo = _users[user];
     _refresh();
