@@ -3,7 +3,7 @@
 pragma experimental ABIEncoderV2;
 pragma solidity 0.6.12;
 
-import '../../governance/interfaces/IGovernanceAddressProvider.sol';
+import "../../governance/interfaces/IGovernanceAddressProvider.sol";
 
 interface IBaseDistributor {
   event PayeeAdded(address account, uint256 shares);

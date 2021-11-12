@@ -3,9 +3,9 @@
 pragma experimental ABIEncoderV2;
 pragma solidity 0.6.12;
 
-import '@openzeppelin/contracts/math/SafeMath.sol';
-import '../../interfaces/IAddressProvider.sol';
-import '../../governance/interfaces/IGovernanceAddressProvider.sol';
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "../../interfaces/IAddressProvider.sol";
+import "../../governance/interfaces/IGovernanceAddressProvider.sol";
 
 interface IGenericMiner {
   struct UserInfo {
