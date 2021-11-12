@@ -1,32 +1,55 @@
-import { AccessControllerInstance, VotingEscrowInstance, MockMimoInstance } from "../../types/truffle-contracts";
+import {
+  AccessControllerInstance,
+  VotingEscrowInstance,
+  MockMIMOInstance,
+  GovernanceAddressProviderInstance,
+  AddressProviderInstance,
+  VotingMinerInstance,
+  MIMOInstance,
+} from '../../types/truffle-contracts';
+import { setupMIMO } from '../utils/helpers';
 
-const { BN, expectEvent, expectRevert, time } = require("@openzeppelin/test-helpers");
+const { BN, expectEvent, expectRevert, time } = require('@openzeppelin/test-helpers');
 
-const AccessController = artifacts.require("AccessController");
-const MockMIMO = artifacts.require("MockMIMO");
-const VotingEscrow = artifacts.require("VotingEscrow");
+const AccessController = artifacts.require('AccessController');
+const GovernanceAddressProvider = artifacts.require('GovernanceAddressProvider');
+const AddressProvider = artifacts.require('AddressProvider');
+const MockMIMO = artifacts.require('MockMIMO');
+const VotingEscrow = artifacts.require('VotingEscrow');
+const VotingMiner = artifacts.require('VotingMiner');
 
-const MINT_AMOUNT = new BN("1000000000000000000000"); // 1000 GOV
-const STAKE_AMOUNT = new BN("100000000000000000000"); // 100 GOV
+const MINT_AMOUNT = new BN('1000000000000000000000'); // 1000 GOV
+const STAKE_AMOUNT = new BN('100000000000000000000'); // 100 GOV
 const ONE_WEEK = time.duration.weeks(1);
 const ONE_MONTH = time.duration.weeks(4);
 const FOUR_YEARS = time.duration.years(4);
 const BUFFER = time.duration.minutes(1);
-const NAME = "MIMO Voting Power";
-const SYMBOL = "vMIMO";
+const NAME = 'MIMO Voting Power';
+const SYMBOL = 'vMIMO';
 
-contract("VotingEscrow", (accounts) => {
-  const [, manager, voter, poorVoter] = accounts;
+contract('VotingEscrow', (accounts) => {
+  const [owner, manager, voter, poorVoter] = accounts;
 
   let controller: AccessControllerInstance;
-  let stakingToken: MockMimoInstance;
+  let a: AddressProviderInstance;
+  let ga: GovernanceAddressProviderInstance;
+  let stakingToken: MockMIMOInstance;
   let escrow: VotingEscrowInstance;
+  let votingMiner: VotingMinerInstance;
+  let mimo: MIMOInstance;
   let startTime: any;
 
   beforeEach(async () => {
     controller = await AccessController.new();
+    a = await AddressProvider.new(controller.address);
+    ga = await GovernanceAddressProvider.new(a.address);
     stakingToken = await MockMIMO.new();
-    escrow = await VotingEscrow.new(stakingToken.address, controller.address, NAME, SYMBOL);
+    votingMiner = await VotingMiner.new(ga.address);
+    escrow = await VotingEscrow.new(stakingToken.address, ga.address, votingMiner.address, NAME, SYMBOL);
+
+    mimo = await setupMIMO(a.address, controller, owner, [owner]);
+    await ga.setMIMO(mimo.address);
+    await ga.setVotingEscrow(escrow.address);
 
     const managerRole = await controller.MANAGER_ROLE();
     await controller.grantRole(managerRole, manager);
@@ -38,7 +61,7 @@ contract("VotingEscrow", (accounts) => {
     await stakingToken.approve(escrow.address, STAKE_AMOUNT, { from: voter });
   });
 
-  it("Initializes correctly", async () => {
+  it('Initializes correctly', async () => {
     const name = await escrow.name();
     const symbol = await escrow.symbol();
     const decimals = await escrow.decimals();
@@ -48,19 +71,32 @@ contract("VotingEscrow", (accounts) => {
 
     const maxtime = await escrow.MAXTIME();
     assert.equal(maxtime.toString(), FOUR_YEARS.toString());
+
+    const miner = await escrow.miner();
+    assert.equal(miner, votingMiner.address);
+
+    const minimumLockTime = await escrow.minimumLockTime();
+    assert.equal(minimumLockTime, time.duration.days(1).toString());
   });
 
-  it("Cannot create lock when not enough balance", async () => {
+  it('Cannot create lock when not enough balance', async () => {
     const currentVotingPower = await stakingToken.balanceOf(poorVoter);
     assert.equal(currentVotingPower.toNumber(), 0);
 
     await expectRevert(
       escrow.createLock(STAKE_AMOUNT, startTime.add(ONE_WEEK), { from: poorVoter }),
-      "ERC20: transfer amount exceeds balance -- Reason given: ERC20: transfer amount exceeds balance.",
+      'ERC20: transfer amount exceeds balance',
     );
   });
 
-  it("Can create lock", async () => {
+  it('Cannot create lock when under 1 day', async () => {
+    await expectRevert(
+      escrow.createLock(STAKE_AMOUNT, startTime.add(BUFFER), { from: voter }),
+      'Lock duration should be larger than minimum locktime',
+    );
+  });
+
+  it('Can create lock', async () => {
     const stakingTokenAllowance = await stakingToken.allowance(voter, escrow.address);
     assert(stakingTokenAllowance.eq(STAKE_AMOUNT));
     const beforeVotingPower = await escrow.balanceOf(voter);
@@ -77,7 +113,7 @@ contract("VotingEscrow", (accounts) => {
     assert(afterVotingPower.gt(new BN(0)));
   });
 
-  it("Voting Power should be calculated correctly", async () => {
+  it('Voting Power should be calculated correctly', async () => {
     const maxtime = await escrow.MAXTIME();
     const stakingTokenAllowance = await stakingToken.allowance(voter, escrow.address);
     assert(stakingTokenAllowance.eq(STAKE_AMOUNT));
@@ -110,7 +146,7 @@ contract("VotingEscrow", (accounts) => {
     }
   });
 
-  it("should be able to increase the lock length into the future", async () => {
+  it('should be able to increase the lock length into the future', async () => {
     await escrow.createLock(STAKE_AMOUNT, startTime.add(ONE_WEEK), { from: voter });
     const oneWeekVotingPower = await escrow.balanceOf(voter);
 
@@ -119,18 +155,18 @@ contract("VotingEscrow", (accounts) => {
     assert(twoWeekVotingPower.gt(oneWeekVotingPower));
   });
 
-  it("should NOT be able to decrease the lock length into the past", async () => {
+  it('should NOT be able to decrease the lock length into the past', async () => {
     await escrow.createLock(STAKE_AMOUNT, startTime.add(ONE_MONTH), { from: voter });
 
     await expectRevert(
       escrow.increaseLockLength(startTime.sub(ONE_WEEK), { from: voter }),
-      "Can only increase lock time -- Reason given: Can only increase lock time.",
+      'Can only increase lock time',
     );
   });
 
-  it.skip("should NOT be able to overwrite existing lock");
+  it.skip('should NOT be able to overwrite existing lock');
 
-  it("should be able to increase the number of locked tokens", async () => {
+  it('should be able to increase the number of locked tokens', async () => {
     await escrow.createLock(STAKE_AMOUNT, startTime.add(ONE_WEEK), { from: voter });
     const beforeVotingPower = await escrow.balanceOf(voter);
     const additionalAmount = STAKE_AMOUNT;
@@ -140,13 +176,13 @@ contract("VotingEscrow", (accounts) => {
     assert(afterVotingPower.gt(beforeVotingPower));
   });
 
-  it("should be able to withdraw tokens after the lock has expired", async () => {
+  it('should be able to withdraw tokens after the lock has expired', async () => {
     const lockTime = startTime.add(ONE_WEEK);
     await escrow.createLock(STAKE_AMOUNT, lockTime, { from: voter });
 
     await time.increaseTo(lockTime);
     const tx = await escrow.withdraw({ from: voter });
-    expectEvent(tx, "Withdraw", {
+    expectEvent(tx, 'Withdraw', {
       provider: voter,
       value: STAKE_AMOUNT,
     });
@@ -154,15 +190,12 @@ contract("VotingEscrow", (accounts) => {
     assert(refundedBalance.eq(MINT_AMOUNT));
   });
 
-  it("should NOT be able to withdraw tokens before the lock has expired", async () => {
+  it('should NOT be able to withdraw tokens before the lock has expired', async () => {
     await escrow.createLock(STAKE_AMOUNT, startTime.add(ONE_WEEK), { from: voter });
-    await expectRevert(
-      escrow.withdraw({ from: voter }),
-      "The lock didn't expire -- Reason given: The lock didn't expire.",
-    );
+    await expectRevert(escrow.withdraw({ from: voter }), "The lock didn't expire");
   });
 
-  it("voting power should decay linearly to 0 at lock expiry", async () => {
+  it('voting power should decay linearly to 0 at lock expiry', async () => {
     const numberYears = 4;
     const lockTime = time.duration.years(numberYears);
     const maxTime = await escrow.MAXTIME();
@@ -183,7 +216,7 @@ contract("VotingEscrow", (accounts) => {
     assert(votingPower.isZero());
   });
 
-  it("voting power should be capped at MAXTIME", async () => {
+  it('voting power should be capped at MAXTIME', async () => {
     const maxTime = await escrow.MAXTIME();
     const lockTime = maxTime.add(ONE_WEEK);
     const unlockTime = startTime.add(lockTime);
@@ -203,35 +236,47 @@ contract("VotingEscrow", (accounts) => {
     assert(votingPowerUnder.lt(votingPowerAt)); // Decay begins
   });
 
-  it("Non-managers should NOT be able to expire contract", async () => {
+  it('Non-managers should NOT be able to expire contract', async () => {
     const managerRole = await controller.MANAGER_ROLE();
     const hasRole = await controller.hasRole(managerRole, voter);
     assert.equal(hasRole, false);
 
-    await expectRevert(escrow.expireContract({ from: voter }), "Caller is not a Manager");
+    await expectRevert(escrow.expireContract({ from: voter }), 'Caller is not a Manager');
     const isExpired = await escrow.expired();
     assert.equal(isExpired, false);
   });
 
-  it("Managers should be able to expire contract", async () => {
+  it('Managers should be able to expire contract', async () => {
     const managerRole = await controller.MANAGER_ROLE();
     const hasRole = await controller.hasRole(managerRole, manager);
     assert.equal(hasRole, true);
 
     const receipt = await escrow.expireContract({ from: manager });
-    expectEvent(receipt, "Expired");
+    expectEvent(receipt, 'Expired');
     const isExpired = await escrow.expired();
     assert.equal(isExpired, true);
   });
 
-  it("should be able to withdraw lock anytime when contract is expired", async () => {
+  it('Managers should be able to set miner', async () => {
+    await escrow.setMiner(poorVoter, { from: manager });
+    const miner = await escrow.miner();
+    assert.equal(miner, poorVoter);
+  });
+
+  it('Managers should be able to set miner', async () => {
+    await escrow.setMinimumLockTime(ONE_WEEK, { from: manager });
+    const minimumLockTime = await escrow.minimumLockTime();
+    assert.equal(minimumLockTime, ONE_WEEK.toString());
+  });
+
+  it('should be able to withdraw lock anytime when contract is expired', async () => {
     await escrow.createLock(STAKE_AMOUNT, startTime.add(ONE_WEEK), { from: voter });
     await escrow.expireContract({ from: manager });
     const isExpired = await escrow.expired();
     assert.equal(isExpired, true);
 
     const tx = await escrow.withdraw({ from: voter });
-    expectEvent(tx, "Withdraw", {
+    expectEvent(tx, 'Withdraw', {
       provider: voter,
       value: STAKE_AMOUNT,
     });

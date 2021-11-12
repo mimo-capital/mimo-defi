@@ -4,30 +4,30 @@ import {
   ConfigProviderInstance,
   VaultsCoreInstance,
   VaultsCoreStateInstance,
-  MockWethInstance,
-} from "../types/truffle-contracts";
-import { assert } from "chai";
-const { constants, basicSetup, setCollateralConfig } = require("./utils/helpers");
+  MockWETHInstance,
+} from '../types/truffle-contracts';
+import { assert } from 'chai';
+const { constants, basicSetup, setCollateralConfig } = require('./utils/helpers');
 
-const AccessController = artifacts.require("AccessController");
-const AddressProvider = artifacts.require("AddressProvider");
-const ConfigProvider = artifacts.require("ConfigProvider");
-const VaultsCore = artifacts.require("VaultsCore");
-const VaultsCoreState = artifacts.require("VaultsCoreState");
-const WETH = artifacts.require("MockWETH");
+const AccessController = artifacts.require('AccessController');
+const AddressProvider = artifacts.require('AddressProvider');
+const ConfigProvider = artifacts.require('ConfigProvider');
+const VaultsCore = artifacts.require('VaultsCore');
+const VaultsCoreState = artifacts.require('VaultsCoreState');
+const WETH = artifacts.require('MockWETH');
 
-const { BN, expectRevert } = require("@openzeppelin/test-helpers");
+const { BN, expectRevert } = require('@openzeppelin/test-helpers');
 
-const COLLATERAL_TYPE = "0xf25186B5081Ff5cE73482AD761DB0eB0d25abfBF"; // Random address
+const COLLATERAL_TYPE = '0xf25186B5081Ff5cE73482AD761DB0eB0d25abfBF'; // Random address
 const ORIGINATION_FEE = constants.AMOUNT_ACCURACY.div(new BN(1000)); /// / 10BPS
 const LIQUIDATION_FEE = constants.AMOUNT_ACCURACY.div(new BN(2000)); // 5BPS
 
-contract("ConfigProvider", (accounts) => {
+contract('ConfigProvider', (accounts) => {
   const [, manager, other] = accounts;
 
   let controller: AccessControllerInstance;
   let a: AddressProviderInstance;
-  let weth: MockWethInstance;
+  let weth: MockWETHInstance;
   let config: ConfigProviderInstance;
   let core: VaultsCoreInstance;
   let coreState: VaultsCoreStateInstance;
@@ -46,15 +46,15 @@ contract("ConfigProvider", (accounts) => {
     await controller.grantRole(managerRole, manager);
   });
 
-  it("should initialize config provider with correct addressProvider & correct default values", async () => {
+  it('should initialize config provider with correct addressProvider & correct default values', async () => {
     const addressProviderAddress = await config.a();
     assert.equal(addressProviderAddress, a.address);
 
     const numberCollateralConfigs = await config.numCollateralConfigs();
-    assert.equal(numberCollateralConfigs.toString(), "0");
+    assert.equal(numberCollateralConfigs.toString(), '0');
   });
 
-  it("manager should be able to add a collateral config", async () => {
+  it('manager should be able to add a collateral config', async () => {
     await setCollateralConfig(
       config,
       { collateralType: COLLATERAL_TYPE, originationFee: ORIGINATION_FEE, liquidationFee: LIQUIDATION_FEE },
@@ -62,7 +62,7 @@ contract("ConfigProvider", (accounts) => {
     );
 
     const numberCollateralConfigs = await config.numCollateralConfigs();
-    assert.equal(numberCollateralConfigs.toString(), "1");
+    assert.equal(numberCollateralConfigs.toString(), '1');
 
     const configResult = await config.collateralConfigs(numberCollateralConfigs);
 
@@ -97,7 +97,7 @@ contract("ConfigProvider", (accounts) => {
     assert.equal(collateralLiquidationFee.toString(), LIQUIDATION_FEE.toString());
   });
 
-  it("manager should be able to update existing collateral config", async () => {
+  it('manager should be able to update existing collateral config', async () => {
     // We need a full setup with ratesmanager, vaultsdata, etc because updating the borrowrate triggers a refresh
     const { config, controller } = await basicSetup({
       wethRate: constants.RATE_50BPS,
@@ -113,7 +113,7 @@ contract("ConfigProvider", (accounts) => {
     );
 
     const numberCollateralConfigs = await config.numCollateralConfigs();
-    assert.equal(numberCollateralConfigs.toString(), "2");
+    assert.equal(numberCollateralConfigs.toString(), '2');
 
     await config.setCollateralDebtLimit(COLLATERAL_TYPE, 0, { from: manager });
     await config.setCollateralLiquidationRatio(COLLATERAL_TYPE, 0, { from: manager });
@@ -126,37 +126,37 @@ contract("ConfigProvider", (accounts) => {
     const configResult = await config.collateralConfigs(numberCollateralConfigs);
 
     assert.equal(configResult.collateralType.toString(), COLLATERAL_TYPE);
-    assert.equal(configResult.debtLimit.toString(), "0");
-    assert.equal(configResult.liquidationRatio.toString(), "0");
-    assert.equal(configResult.minCollateralRatio.toString(), "0");
-    assert.equal(configResult.borrowRate.toString(), "0");
-    assert.equal(configResult.originationFee.toString(), "0");
-    assert.equal(configResult.liquidationBonus.toString(), "0");
-    assert.equal(configResult.liquidationFee.toString(), "0");
+    assert.equal(configResult.debtLimit.toString(), '0');
+    assert.equal(configResult.liquidationRatio.toString(), '0');
+    assert.equal(configResult.minCollateralRatio.toString(), '0');
+    assert.equal(configResult.borrowRate.toString(), '0');
+    assert.equal(configResult.originationFee.toString(), '0');
+    assert.equal(configResult.liquidationBonus.toString(), '0');
+    assert.equal(configResult.liquidationFee.toString(), '0');
 
     const collateralDebtLimit = await config.collateralDebtLimit(COLLATERAL_TYPE);
-    assert.equal(collateralDebtLimit.toString(), "0");
+    assert.equal(collateralDebtLimit.toString(), '0');
 
     const collateralLiquidationRatio = await config.collateralLiquidationRatio(COLLATERAL_TYPE);
-    assert.equal(collateralLiquidationRatio.toString(), "0");
+    assert.equal(collateralLiquidationRatio.toString(), '0');
 
     const collateralMinCollateralRatio = await config.collateralMinCollateralRatio(COLLATERAL_TYPE);
-    assert.equal(collateralMinCollateralRatio.toString(), "0");
+    assert.equal(collateralMinCollateralRatio.toString(), '0');
 
     const collateralBorrowRate = await config.collateralBorrowRate(COLLATERAL_TYPE);
-    assert.equal(collateralBorrowRate.toString(), "0");
+    assert.equal(collateralBorrowRate.toString(), '0');
 
     const collateralOriginationFee = await config.collateralOriginationFee(COLLATERAL_TYPE);
-    assert.equal(collateralOriginationFee.toString(), "0");
+    assert.equal(collateralOriginationFee.toString(), '0');
 
     const collateralLiquidationBonus = await config.collateralLiquidationBonus(COLLATERAL_TYPE);
-    assert.equal(collateralLiquidationBonus.toString(), "0");
+    assert.equal(collateralLiquidationBonus.toString(), '0');
 
     const collateralLiquidationFee = await config.collateralLiquidationFee(COLLATERAL_TYPE);
-    assert.equal(collateralLiquidationFee.toString(), "0");
+    assert.equal(collateralLiquidationFee.toString(), '0');
   });
 
-  it("should not setCollateralConfig with open ratio smaller collateral ratio", async () => {
+  it('should not setCollateralConfig with open ratio smaller collateral ratio', async () => {
     await expectRevert.unspecified(
       setCollateralConfig(
         config,
@@ -170,7 +170,7 @@ contract("ConfigProvider", (accounts) => {
     );
   });
 
-  it("NON-manager should NOT be able to set setCollateralConfig", async () => {
+  it('NON-manager should NOT be able to set setCollateralConfig', async () => {
     await expectRevert.unspecified(
       setCollateralConfig(
         config,
@@ -183,7 +183,7 @@ contract("ConfigProvider", (accounts) => {
     );
   });
 
-  it("should not setCollateralLiquidationRatio with collateral ratio larger than open ratio", async () => {
+  it('should not setCollateralLiquidationRatio with collateral ratio larger than open ratio', async () => {
     await setCollateralConfig(
       config,
       { collateralType: COLLATERAL_TYPE, originationFee: ORIGINATION_FEE },
@@ -197,7 +197,7 @@ contract("ConfigProvider", (accounts) => {
     );
   });
 
-  it("should not setCollateralMinCollateralRatio with open ratio smaller collateral ratio", async () => {
+  it('should not setCollateralMinCollateralRatio with open ratio smaller collateral ratio', async () => {
     await setCollateralConfig(
       config,
       { collateralType: COLLATERAL_TYPE, originationFee: ORIGINATION_FEE },
@@ -211,7 +211,7 @@ contract("ConfigProvider", (accounts) => {
     );
   });
 
-  it("should not setCollateralLiquidationFee higher than 100%", async () => {
+  it('should not setCollateralLiquidationFee higher than 100%', async () => {
     await config.setCollateralLiquidationFee(COLLATERAL_TYPE, constants.AMOUNT_ACCURACY.sub(new BN(1)), {
       from: manager,
     });

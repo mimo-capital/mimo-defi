@@ -2,9 +2,9 @@
 pragma experimental ABIEncoderV2;
 pragma solidity 0.6.12;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "../libraries/WadRayMath.sol";
-import "./interfaces/IGenericMiner.sol";
+import '@openzeppelin/contracts/math/SafeMath.sol';
+import '../libraries/WadRayMath.sol';
+import './interfaces/IGenericMiner.sol';
 
 /*
     GenericMiner is based on ERC2917. https://github.com/gnufoo/ERC2917-Proposal
@@ -21,13 +21,13 @@ contract GenericMiner is IGenericMiner {
   using SafeMath for uint256;
   using WadRayMath for uint256;
 
-  mapping(address => UserInfo) private _users;
+  mapping(address => UserInfo) internal _users;
 
   uint256 public override totalStake;
   IGovernanceAddressProvider public override a;
 
-  uint256 private _balanceTracker;
-  uint256 private _accAmountPerShare;
+  uint256 internal _balanceTracker;
+  uint256 internal _accAmountPerShare;
 
   constructor(IGovernanceAddressProvider _addresses) public {
     require(address(_addresses) != address(0));
@@ -38,10 +38,10 @@ contract GenericMiner is IGenericMiner {
     Releases the outstanding MIMO balance to the user.
     @param _user the address of the user for which the MIMO tokens will be released.
   */
-  function releaseMIMO(address _user) public override {
+  function releaseMIMO(address _user) public virtual override {
     UserInfo storage userInfo = _users[_user];
     _refresh();
-    uint256 pending = userInfo.stake.wadMul(_accAmountPerShare.sub(userInfo.accAmountPerShare));
+    uint256 pending = userInfo.stake.rayMul(_accAmountPerShare.sub(userInfo.accAmountPerShare));
     _balanceTracker = _balanceTracker.sub(pending);
     userInfo.accAmountPerShare = _accAmountPerShare;
     require(a.mimo().transfer(_user, pending));
@@ -54,6 +54,19 @@ contract GenericMiner is IGenericMiner {
   */
   function stake(address _user) public view override returns (uint256) {
     return _users[_user].stake;
+  }
+
+  /**
+    Returns the number of tokens a user can claim via `releaseMIMO`.
+    @param _user the address of the user.
+    @return number of MIMO tokens that the user can claim
+  */
+  function pendingMIMO(address _user) public view override returns (uint256) {
+    uint256 currentBalance = a.mimo().balanceOf(address(this));
+    uint256 reward = currentBalance.sub(_balanceTracker);
+    uint256 accAmountPerShare = _accAmountPerShare.add(reward.rayDiv(totalStake));
+
+    return _users[_user].stake.rayMul(accAmountPerShare.sub(_users[_user].accAmountPerShare));
   }
 
   /**
@@ -75,12 +88,12 @@ contract GenericMiner is IGenericMiner {
     @param value the amount by which the stake will be reduced
   */
   function _decreaseStake(address user, uint256 value) internal {
-    require(value > 0, "STAKE_MUST_BE_GREATER_THAN_ZERO"); //TODO cleanup error message
+    require(value > 0, 'STAKE_MUST_BE_GREATER_THAN_ZERO'); //TODO cleanup error message
 
     UserInfo storage userInfo = _users[user];
-    require(userInfo.stake >= value, "INSUFFICIENT_STAKE_FOR_USER"); //TODO cleanup error message
+    require(userInfo.stake >= value, 'INSUFFICIENT_STAKE_FOR_USER'); //TODO cleanup error message
     _refresh();
-    uint256 pending = userInfo.stake.wadMul(_accAmountPerShare.sub(userInfo.accAmountPerShare));
+    uint256 pending = userInfo.stake.rayMul(_accAmountPerShare.sub(userInfo.accAmountPerShare));
     _balanceTracker = _balanceTracker.sub(pending);
     userInfo.stake = userInfo.stake.sub(value);
     userInfo.accAmountPerShare = _accAmountPerShare;
@@ -97,14 +110,14 @@ contract GenericMiner is IGenericMiner {
     @param value the amount by which the stake will be increased
   */
   function _increaseStake(address user, uint256 value) internal {
-    require(value > 0, "STAKE_MUST_BE_GREATER_THAN_ZERO"); //TODO cleanup error message
+    require(value > 0, 'STAKE_MUST_BE_GREATER_THAN_ZERO'); //TODO cleanup error message
 
     UserInfo storage userInfo = _users[user];
     _refresh();
 
     uint256 pending;
     if (userInfo.stake > 0) {
-      pending = userInfo.stake.wadMul(_accAmountPerShare.sub(userInfo.accAmountPerShare));
+      pending = userInfo.stake.rayMul(_accAmountPerShare.sub(userInfo.accAmountPerShare));
       _balanceTracker = _balanceTracker.sub(pending);
     }
 
@@ -156,6 +169,6 @@ contract GenericMiner is IGenericMiner {
     uint256 reward = currentBalance.sub(_balanceTracker);
     _balanceTracker = currentBalance;
 
-    _accAmountPerShare = _accAmountPerShare.add(reward.wadDiv(totalStake));
+    _accAmountPerShare = _accAmountPerShare.add(reward.rayDiv(totalStake));
   }
 }

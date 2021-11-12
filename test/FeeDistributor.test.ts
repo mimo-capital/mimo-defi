@@ -1,28 +1,28 @@
-const _ = require("underscore");
+const _ = require('underscore');
 import {
   VaultsCoreInstance,
   VaultsCoreStateInstance,
   VaultsDataProviderInstance,
-  MockWethInstance,
+  MockWETHInstance,
   RatesManagerInstance,
   AccessControllerInstance,
-  UsdxInstance,
+  USDXInstance,
   FeeDistributorInstance,
   ConfigProviderInstance,
   AddressProviderInstance,
-} from "../types/truffle-contracts";
-import { assert } from "chai";
-import { constants, fullSetup, depositAndBorrow, cumulativeRateHelper } from "./utils/helpers";
+} from '../types/truffle-contracts';
+import { assert } from 'chai';
+import { constants, fullSetup, depositAndBorrow, cumulativeRateHelper } from './utils/helpers';
 
-const FeeDistributor = artifacts.require("FeeDistributor");
+const FeeDistributor = artifacts.require('FeeDistributor');
 
-const { BN, expectEvent, expectRevert, time } = require("@openzeppelin/test-helpers");
+const { BN, expectEvent, expectRevert, time } = require('@openzeppelin/test-helpers');
 
 const DEPOSIT_AMOUNT = constants.AMOUNT_ACCURACY; // 1 ETH
-const BORROW_AMOUNT = constants.AMOUNT_ACCURACY.mul(new BN("100")); // 100 USDX
-const ORIGINATION_FEE = constants.AMOUNT_ACCURACY.div(new BN("100")); // 1% fee
+const BORROW_AMOUNT = constants.AMOUNT_ACCURACY.mul(new BN('100')); // 100 USDX
+const ORIGINATION_FEE = constants.AMOUNT_ACCURACY.div(new BN('100')); // 1% fee
 
-contract("FeeDistributor", (accounts) => {
+contract('FeeDistributor', (accounts) => {
   const [owner, A, B, borrower, other] = accounts;
   const PAYEES = [A, B];
   const SHARES = [10, 80];
@@ -31,10 +31,10 @@ contract("FeeDistributor", (accounts) => {
   let all_shares: number[];
 
   let c: {
-    weth: MockWethInstance;
+    weth: MockWETHInstance;
     controller: AccessControllerInstance;
     vaultsData: VaultsDataProviderInstance;
-    stablex: UsdxInstance;
+    stablex: USDXInstance;
     core: VaultsCoreInstance;
     coreState: VaultsCoreStateInstance;
     rates: RatesManagerInstance;
@@ -53,18 +53,18 @@ contract("FeeDistributor", (accounts) => {
     all_shares = [...SHARES, 10];
   });
 
-  it("should initialize fee distributor as minter", async () => {
+  it('should initialize fee distributor as minter', async () => {
     const minterRole = await c.controller.MINTER_ROLE();
     const isMinter = await c.controller.hasRole(minterRole, c.fees.address);
     assert.equal(isMinter, true);
   });
 
-  it("should initialize with total shares", async () => {
+  it('should initialize with total shares', async () => {
     const totalShares = await c.fees.totalShares();
-    assert.equal(totalShares.toString(), "100");
+    assert.equal(totalShares.toString(), '100');
   });
 
-  it("should initialize with payees and shares", async () => {
+  it('should initialize with payees and shares', async () => {
     const payees: string[] = await c.fees.getPayees();
     await Promise.all(
       payees.map(async (_: string, index: number) => {
@@ -81,7 +81,7 @@ contract("FeeDistributor", (accounts) => {
     );
   });
 
-  it("should initialize cumulative and current rate to 1", async () => {
+  it('should initialize cumulative and current rate to 1', async () => {
     const cumulativeRate = await c.core.cumulativeRates(c.weth.address);
     assert.equal(cumulativeRate.toString(), constants.RATE_ACCURACY.toString());
 
@@ -89,12 +89,12 @@ contract("FeeDistributor", (accounts) => {
     assert.equal(borrowRate.toString(), constants.RATE_ACCURACY.toString());
   });
 
-  it("available income should be 0 after initialize", async () => {
+  it('available income should be 0 after initialize', async () => {
     const availableIncome = await c.coreState.availableIncome();
-    assert.equal(availableIncome.toString(), "0");
+    assert.equal(availableIncome.toString(), '0');
   });
 
-  it("should be able to accrue fees", async () => {
+  it('should be able to accrue fees', async () => {
     // Setup vault & borrow 100 USDX
     await depositAndBorrow(c, {
       vaultOwner: borrower,
@@ -115,10 +115,10 @@ contract("FeeDistributor", (accounts) => {
 
     // Income calculation is tested in VaultsCore.income.test, here it's just a simple check of > 0
     const availableIncome = await c.coreState.availableIncome();
-    assert.notEqual(availableIncome.toString(), "0");
+    assert.notEqual(availableIncome.toString(), '0');
   });
 
-  it("should be able to release accrued fees to payees", async () => {
+  it('should be able to release accrued fees to payees', async () => {
     await depositAndBorrow(c, {
       vaultOwner: borrower,
       mint: DEPOSIT_AMOUNT,
@@ -142,12 +142,12 @@ contract("FeeDistributor", (accounts) => {
     await Promise.all(
       payees.map(async (payee) => {
         const payeeBalanceBefore = await c.stablex.balanceOf(payee);
-        assert.equal(payeeBalanceBefore.toString(), "0");
+        assert.equal(payeeBalanceBefore.toString(), '0');
       }),
     );
 
     const cumulativeRateUpdatedEvent = _.findWhere(txReceipt1.logs, {
-      event: "CumulativeRateUpdated",
+      event: 'CumulativeRateUpdated',
     });
     const elapsedTime = new BN(cumulativeRateUpdatedEvent.args.elapsedTime);
     const rateAnnualized = cumulativeRateHelper(constants.RATE_50BPS, elapsedTime);
@@ -157,7 +157,7 @@ contract("FeeDistributor", (accounts) => {
     const availableIncome: BN = await c.coreState.availableIncome();
     const tokenSupplyBefore: BN = await c.stablex.totalSupply();
     const txReceipt2 = await c.fees.release({ from: other }); // Anyone can call this
-    expectEvent(txReceipt2, "FeeReleased", {
+    expectEvent(txReceipt2, 'FeeReleased', {
       income: availableIncome,
     });
     const tokenSupplyAfter: BN = await c.stablex.totalSupply();
@@ -178,16 +178,16 @@ contract("FeeDistributor", (accounts) => {
     assert.equal(totalMinted.add(remainingAvailableIncome).toString(), expectedIncome.toString());
   });
 
-  it("should allow updating payees", async () => {
+  it('should allow updating payees', async () => {
     await c.fees.changePayees([owner], [1]);
     const payees: string[] = await c.fees.getPayees();
     assert.deepEqual(payees, [owner]);
 
     const totalShares = await c.fees.totalShares();
-    assert.equal(totalShares.toString(), "1");
+    assert.equal(totalShares.toString(), '1');
   });
 
-  it("release without any payees configured should fail", async () => {
+  it('release without any payees configured should fail', async () => {
     await c.config.setCollateralOriginationFee(c.weth.address, ORIGINATION_FEE);
 
     c.fees = await FeeDistributor.new(c.addresses.address);
@@ -204,11 +204,11 @@ contract("FeeDistributor", (accounts) => {
 
     const availableIncomeBefore = await c.coreState.availableIncome();
     assert.equal(availableIncomeBefore.toString(), expectedIncome.toString());
-    await expectRevert(c.fees.release(), "Payees not configured yet");
+    await expectRevert(c.fees.release(), 'Payees not configured yet');
     const availableIncomeAfter = await c.coreState.availableIncome();
     assert.equal(availableIncomeAfter.toString(), expectedIncome.toString());
   });
 
-  it.skip("changePayees should distribute existing income");
-  it.skip("updating payees should work correctly");
+  it.skip('changePayees should distribute existing income');
+  it.skip('updating payees should work correctly');
 });

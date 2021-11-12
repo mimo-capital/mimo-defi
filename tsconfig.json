@@ -7,9 +7,13 @@
     "target": "ES2018",
     "sourceMap": true,
     "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
     "allowJs": true,
     "outDir": "build/",
+    "resolveJsonModule": true,
     "skipLibCheck": true
   },
-  "exclude": ["./migrations-ts/*.ts", "coverage", "build", "thegraph"]
+  "include": ["./hardhat.config.ts", "./scripts", "./deploy_sidechain", "./deploy_rootchain", "./test", "./types", "./typechain-types"],
+  "exclude": ["./thegraph"],
+  "files": ["./hardhat.config.ts"]
 }

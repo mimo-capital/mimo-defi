@@ -1,12 +1,12 @@
-import { AddressProviderInstance, AccessControllerInstance } from "../types/truffle-contracts";
-import { assert } from "chai";
+import { AddressProviderInstance, AccessControllerInstance } from '../types/truffle-contracts';
+import { assert } from 'chai';
 
-const AccessController = artifacts.require("AccessController");
-const AddressProvider = artifacts.require("AddressProvider");
+const AccessController = artifacts.require('AccessController');
+const AddressProvider = artifacts.require('AddressProvider');
 
-const { expectRevert } = require("@openzeppelin/test-helpers");
+const { expectRevert } = require('@openzeppelin/test-helpers');
 
-contract("AddressProvider", (accounts) => {
+contract('AddressProvider', (accounts) => {
   const [, manager, other, address1, address2] = accounts;
 
   let controller: AccessControllerInstance;
@@ -20,7 +20,7 @@ contract("AddressProvider", (accounts) => {
     await controller.grantRole(managerRole, manager);
   });
 
-  it("should initialize address provider with correct controller & empty addresses for everything else", async () => {
+  it('should initialize address provider with correct controller & empty addresses for everything else', async () => {
     const controllerAddress = await a.controller();
     assert.equal(controllerAddress, controller.address);
 
@@ -37,11 +37,11 @@ contract("AddressProvider", (accounts) => {
 
     const results = await Promise.all(modulePromises);
     results.forEach((moduleAddress) => {
-      assert.equal(moduleAddress, "0x0000000000000000000000000000000000000000");
+      assert.equal(moduleAddress, '0x0000000000000000000000000000000000000000');
     });
   });
 
-  it("manager should be able to update addresses", async () => {
+  it('manager should be able to update addresses', async () => {
     await Promise.all([
       a.setConfigProvider(address1, { from: manager }),
       a.setVaultsCore(address1, { from: manager }),
@@ -74,7 +74,7 @@ contract("AddressProvider", (accounts) => {
     assert.equal(controllerAddress, address1);
   });
 
-  it("non-manager should NOT be able to update addresses", async () => {
+  it('non-manager should NOT be able to update addresses', async () => {
     await Promise.all([
       a.setConfigProvider(address1, { from: manager }),
       a.setVaultsCore(address1, { from: manager }),
@@ -87,17 +87,17 @@ contract("AddressProvider", (accounts) => {
     ]);
 
     await Promise.all([
-      expectRevert(a.setAccessController(address2, { from: other }), "Caller is not a Manager."),
-      expectRevert(a.setConfigProvider(address2, { from: other }), "Caller is not a Manager."),
-      expectRevert(a.setVaultsCore(address2, { from: other }), "Caller is not a Manager."),
-      expectRevert(a.setStableX(address2, { from: other }), "Caller is not a Manager."),
-      expectRevert(a.setRatesManager(address2, { from: other }), "Caller is not a Manager."),
-      expectRevert(a.setPriceFeed(address2, { from: other }), "Caller is not a Manager."),
-      expectRevert(a.setLiquidationManager(address2, { from: other }), "Caller is not a Manager."),
-      expectRevert(a.setVaultsDataProvider(address2, { from: other }), "Caller is not a Manager."),
-      expectRevert(a.setFeeDistributor(address2, { from: other }), "Caller is not a Manager."),
+      expectRevert(a.setAccessController(address2, { from: other }), 'Caller is not a Manager'),
+      expectRevert(a.setConfigProvider(address2, { from: other }), 'Caller is not a Manager'),
+      expectRevert(a.setVaultsCore(address2, { from: other }), 'Caller is not a Manager'),
+      expectRevert(a.setStableX(address2, { from: other }), 'Caller is not a Manager'),
+      expectRevert(a.setRatesManager(address2, { from: other }), 'Caller is not a Manager'),
+      expectRevert(a.setPriceFeed(address2, { from: other }), 'Caller is not a Manager'),
+      expectRevert(a.setLiquidationManager(address2, { from: other }), 'Caller is not a Manager'),
+      expectRevert(a.setVaultsDataProvider(address2, { from: other }), 'Caller is not a Manager'),
+      expectRevert(a.setFeeDistributor(address2, { from: other }), 'Caller is not a Manager'),
     ]);
   });
 
-  it.skip("every module should have the addressProvider readable & setable");
+  it.skip('every module should have the addressProvider readable & setable');
 });

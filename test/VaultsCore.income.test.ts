@@ -1,31 +1,31 @@
-const _ = require("underscore");
+const _ = require('underscore');
 import {
   VaultsCoreInstance,
   VaultsCoreStateInstance,
   VaultsDataProviderInstance,
-  MockWethInstance,
+  MockWETHInstance,
   RatesManagerInstance,
   AccessControllerInstance,
-  UsdxInstance,
+  USDXInstance,
   ConfigProviderInstance,
   MockChainlinkAggregatorInstance,
-} from "../types/truffle-contracts";
+} from '../types/truffle-contracts';
 
-const { BN, time } = require("@openzeppelin/test-helpers");
-import { cumulativeRateHelper, basicSetup, depositAndBorrow, constants } from "./utils/helpers";
-const truffleEvent = require("./utils/truffle-events.js");
+const { BN, time } = require('@openzeppelin/test-helpers');
+import { cumulativeRateHelper, basicSetup, depositAndBorrow, constants } from './utils/helpers';
+const truffleEvent = require('./utils/truffle-events.js');
 
 const DEPOSIT_AMOUNT = constants.AMOUNT_ACCURACY; // 1 ETH
-const WETH_AMOUNT = constants.AMOUNT_ACCURACY.mul(new BN("100")); // 100 ETH
-const BORROW_AMOUNT = constants.AMOUNT_ACCURACY.mul(new BN("100")); // 100 USDX
+const WETH_AMOUNT = constants.AMOUNT_ACCURACY.mul(new BN('100')); // 100 ETH
+const BORROW_AMOUNT = constants.AMOUNT_ACCURACY.mul(new BN('100')); // 100 USDX
 
-contract("VaultsCore income", (accounts) => {
+contract('VaultsCore income', (accounts) => {
   const [owner, other] = accounts;
 
   let c: {
-    weth: MockWethInstance;
+    weth: MockWETHInstance;
     controller: AccessControllerInstance;
-    stablex: UsdxInstance;
+    stablex: USDXInstance;
     core: VaultsCoreInstance;
     coreState: VaultsCoreStateInstance;
     vaultsData: VaultsDataProviderInstance;
@@ -41,7 +41,7 @@ contract("VaultsCore income", (accounts) => {
     await c.weth.mint(other, WETH_AMOUNT); // Mint some test WETH
   });
 
-  it("should calculate income correctly for a single vault", async () => {
+  it('should calculate income correctly for a single vault', async () => {
     // Setup vault & borrow 100 USDX
     await c.weth.approve(c.core.address, DEPOSIT_AMOUNT, { from: other });
     await c.core.deposit(c.weth.address, DEPOSIT_AMOUNT, { from: other });
@@ -60,14 +60,14 @@ contract("VaultsCore income", (accounts) => {
     const txReceipt = await c.coreState.refresh({ from: other }); // Anyone should be able to call this
 
     const cumulativeRateUpdatedEvent = _.findWhere(txReceipt.logs, {
-      event: "CumulativeRateUpdated",
+      event: 'CumulativeRateUpdated',
     });
 
     const elapsedTime = new BN(cumulativeRateUpdatedEvent.args.elapsedTime);
     assert.isBelow(
       elapsedTime.sub(time.duration.years(1)).toNumber(),
       10,
-      "elapsedTime should not be off by more than 10 sec",
+      'elapsedTime should not be off by more than 10 sec',
     );
 
     // Test income calculation
@@ -82,7 +82,7 @@ contract("VaultsCore income", (accounts) => {
     assert.equal(availableIncome.toString(), expectedIncome.toString());
   });
 
-  it("should add origination fee to income when borrowing", async () => {
+  it('should add origination fee to income when borrowing', async () => {
     const originationFeePercentage = String(1e16); // 1%
     await c.config.setCollateralOriginationFee(c.weth.address, originationFeePercentage);
 
@@ -102,7 +102,7 @@ contract("VaultsCore income", (accounts) => {
     assert.equal(availableIncome.toString(), originationFee.toString());
   });
 
-  it("withdraw should update income and cumulative rate", async () => {
+  it('withdraw should update income and cumulative rate', async () => {
     // Setup vault & borrow 100 USDX
     const { vaultId } = await depositAndBorrow(c, {
       vaultOwner: other,
@@ -123,8 +123,8 @@ contract("VaultsCore income", (accounts) => {
 
     const txReceipt = await c.core.withdraw(vaultId, 1, { from: other });
 
-    const decodedEvents = truffleEvent.decodeEvents(txReceipt, "VaultsCoreState");
-    const cumulativeRateUpdated = _.findWhere(decodedEvents, { event: "CumulativeRateUpdated" });
+    const decodedEvents = truffleEvent.decodeEvents(txReceipt, 'VaultsCoreState');
+    const cumulativeRateUpdated = _.findWhere(decodedEvents, { event: 'CumulativeRateUpdated' });
     const elapsedTime = new BN(cumulativeRateUpdated.args.elapsedTime);
 
     // Test income calculation
@@ -139,9 +139,9 @@ contract("VaultsCore income", (accounts) => {
     assert.equal(availableIncome.toString(), expectedIncome.toString());
   });
 
-  it.skip("should calculate income correctly for multiple vaults");
-  it.skip("should calculate income correctly with changing interest rates");
-  it.skip("should calculate income correctly when repaying");
-  it.skip("should calculate income correctly when liquidating");
-  it.skip("should calculate income correctly when borrowing more");
+  it.skip('should calculate income correctly for multiple vaults');
+  it.skip('should calculate income correctly with changing interest rates');
+  it.skip('should calculate income correctly when repaying');
+  it.skip('should calculate income correctly when liquidating');
+  it.skip('should calculate income correctly when borrowing more');
 });

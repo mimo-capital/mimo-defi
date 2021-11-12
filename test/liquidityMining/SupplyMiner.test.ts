@@ -3,38 +3,38 @@ import {
   VaultsCoreInstance,
   DebtNotifierInstance,
   VaultsDataProviderInstance,
-  MockWethInstance,
+  MockWETHInstance,
   AccessControllerInstance,
-  UsdxInstance,
+  USDXInstance,
   AddressProviderInstance,
-  MimoInstance,
+  MIMOInstance,
   GovernanceAddressProviderInstance,
   ConfigProviderInstance,
-} from "../../types/truffle-contracts";
+} from '../../types/truffle-contracts';
 
-import { basicSetup, constants, setupMIMO } from "../utils/helpers";
-const { BN, time } = require("@openzeppelin/test-helpers");
+import { basicSetup, constants, setupMIMO } from '../utils/helpers';
+const { BN, time } = require('@openzeppelin/test-helpers');
 
-const SupplyMiner = artifacts.require("SupplyMiner");
+const SupplyMiner = artifacts.require('SupplyMiner');
 
 const DEPOSIT_AMOUNT = constants.AMOUNT_ACCURACY; // 1 ETH
-const BORROW_AMOUNT = constants.AMOUNT_ACCURACY.mul(new BN("100")); // 100 PAR
-const WETH_AMOUNT = constants.AMOUNT_ACCURACY.mul(new BN("100")); // 100 ETH
+const BORROW_AMOUNT = constants.AMOUNT_ACCURACY.mul(new BN('100')); // 100 PAR
+const WETH_AMOUNT = constants.AMOUNT_ACCURACY.mul(new BN('100')); // 100 ETH
 
-contract("Supply Miner", (accounts) => {
+contract('Supply Miner', (accounts) => {
   const [manager, alice] = accounts;
 
   let a: GovernanceAddressProviderInstance;
-  let mimo: MimoInstance;
+  let mimo: MIMOInstance;
   let supplyMiner: SupplyMinerInstance;
   let debtNotifier: DebtNotifierInstance;
 
   let parallel: {
-    weth: MockWethInstance;
+    weth: MockWETHInstance;
     addresses: AddressProviderInstance;
     controller: AccessControllerInstance;
     config: ConfigProviderInstance;
-    stablex: UsdxInstance;
+    stablex: USDXInstance;
     core: VaultsCoreInstance;
     vaultsData: VaultsDataProviderInstance;
     debtNotifier: DebtNotifierInstance;
@@ -59,18 +59,18 @@ contract("Supply Miner", (accounts) => {
     await debtNotifier.setCollateralSupplyMiner(parallel.weth.address, supplyMiner.address);
   });
 
-  it("initialized Supply Miner correctly", async () => {
+  it('initialized Supply Miner correctly', async () => {
     const balance = await mimo.balanceOf(supplyMiner.address);
-    assert.equal(balance.toString(), "0");
+    assert.equal(balance.toString(), '0');
 
     const totalStake = await supplyMiner.totalStake();
-    assert.equal(totalStake.toString(), "0");
+    assert.equal(totalStake.toString(), '0');
 
     const mappedAddress = await debtNotifier.collateralSupplyMinerMapping(parallel.weth.address);
     assert.equal(mappedAddress, supplyMiner.address);
   });
 
-  it("should allow to borrow and receive stake for a user", async () => {
+  it('should allow to borrow and receive stake for a user', async () => {
     const vaultId = await parallel.vaultsData.vaultId(parallel.weth.address, alice);
     await parallel.core.borrow(vaultId, BORROW_AMOUNT, { from: alice });
     const totalStake = await supplyMiner.totalStake();
@@ -80,11 +80,11 @@ contract("Supply Miner", (accounts) => {
     assert.equal(aliceStake.toString(), BORROW_AMOUNT.toString()); // BaseDebt = debt for 0%
   });
 
-  it("vaults core borrow should work even when debtnotifier is not configured", async () => {
-    await debtNotifier.setCollateralSupplyMiner(parallel.weth.address, "0x0000000000000000000000000000000000000000");
+  it('vaults core borrow should work even when debtnotifier is not configured', async () => {
+    await debtNotifier.setCollateralSupplyMiner(parallel.weth.address, '0x0000000000000000000000000000000000000000');
 
     const mappedAddress = await debtNotifier.collateralSupplyMinerMapping(parallel.weth.address);
-    assert.equal(mappedAddress, "0x0000000000000000000000000000000000000000");
+    assert.equal(mappedAddress, '0x0000000000000000000000000000000000000000');
 
     const vaultId = await parallel.vaultsData.vaultId(parallel.weth.address, alice);
     await parallel.core.borrow(vaultId, BORROW_AMOUNT, { from: alice });
@@ -93,20 +93,20 @@ contract("Supply Miner", (accounts) => {
     assert.equal(debt.toString(), BORROW_AMOUNT.toString());
   });
 
-  it("repaying should send correct amount of MIMO to user", async () => {
+  it('repaying should send correct amount of MIMO to user', async () => {
     const vaultId = await parallel.vaultsData.vaultId(parallel.weth.address, alice);
     await parallel.core.borrow(vaultId, BORROW_AMOUNT, { from: alice });
     await mimo.mint(supplyMiner.address, 100);
     await parallel.core.repay(vaultId, BORROW_AMOUNT, { from: alice });
 
     const aliceStake = await supplyMiner.stake(alice);
-    assert.equal(aliceStake.toString(), "0");
+    assert.equal(aliceStake.toString(), '0');
 
     const aliceMimoBalance = await mimo.balanceOf(alice);
-    assert.equal(aliceMimoBalance.toString(), "100");
+    assert.equal(aliceMimoBalance.toString(), '100');
   });
 
-  it("liquidation should send correct amount of MIMO to user", async () => {
+  it('liquidation should send correct amount of MIMO to user', async () => {
     const vaultId = await parallel.vaultsData.vaultId(parallel.weth.address, alice);
     await parallel.core.borrow(vaultId, BORROW_AMOUNT, { from: alice });
 
@@ -141,7 +141,7 @@ contract("Supply Miner", (accounts) => {
     await parallel.core.liquidate(vaultId, { from: manager });
 
     const aliceStake = await supplyMiner.stake(alice);
-    assert.equal(aliceStake.toString(), "0");
+    assert.equal(aliceStake.toString(), '0');
 
     const managerStake = await supplyMiner.stake(manager);
     assert.equal(managerStake.toString(), BORROW_AMOUNT.toString());
@@ -150,7 +150,7 @@ contract("Supply Miner", (accounts) => {
     assert.equal(aliceMimoBalance.toString(), constants.AMOUNT_ACCURACY.div(new BN(2)));
   });
 
-  it("debtnotifier should handle non-0 interest rates correctly", async () => {
+  it('debtnotifier should handle non-0 interest rates correctly', async () => {
     await parallel.config.setCollateralBorrowRate(parallel.weth.address, constants.RATE_50BPS, { from: manager });
     const vaultId = await parallel.vaultsData.vaultId(parallel.weth.address, alice);
     await parallel.core.borrow(vaultId, BORROW_AMOUNT, { from: alice });
@@ -164,9 +164,9 @@ contract("Supply Miner", (accounts) => {
     await parallel.core.repayAll(vaultId, { from: alice });
 
     const aliceStake = await supplyMiner.stake(alice);
-    assert.equal(aliceStake.toString(), "0");
+    assert.equal(aliceStake.toString(), '0');
 
     const aliceMimoBalance = await mimo.balanceOf(alice);
-    assert.equal(aliceMimoBalance.toString(), "100");
+    assert.equal(aliceMimoBalance.toString(), '100');
   });
 });

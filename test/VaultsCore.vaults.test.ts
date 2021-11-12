@@ -2,36 +2,36 @@ import {
   VaultsCoreInstance,
   VaultsCoreStateInstance,
   VaultsDataProviderInstance,
-  MockWethInstance,
+  MockWETHInstance,
   RatesManagerInstance,
   AccessControllerInstance,
-  UsdxInstance,
+  USDXInstance,
   PriceFeedInstance,
   MockChainlinkAggregatorInstance,
   LiquidationManagerInstance,
   ConfigProviderInstance,
-} from "../types/truffle-contracts/index";
-import { assert, expect } from "chai";
-import _ from "underscore";
+} from '../types/truffle-contracts/index';
+import { assert, expect } from 'chai';
+import _ from 'underscore';
 
-const MockBuggyERC20 = artifacts.require("MockBuggyERC20");
-const WBTC = artifacts.require("MockWBTC");
+const MockBuggyERC20 = artifacts.require('MockBuggyERC20');
+const WBTC = artifacts.require('MockWBTC');
 
-const { BN, expectEvent, expectRevert, time } = require("@openzeppelin/test-helpers");
-import { setCollateralConfig, cumulativeRateHelper, basicSetup, constants, getTxFee } from "./utils/helpers";
+const { BN, expectEvent, expectRevert, time } = require('@openzeppelin/test-helpers');
+import { setCollateralConfig, cumulativeRateHelper, basicSetup, constants, getTxFee } from './utils/helpers';
 
 const DEPOSIT_AMOUNT = constants.AMOUNT_ACCURACY; // 1 ETH
-const BORROW_AMOUNT = constants.AMOUNT_ACCURACY.mul(new BN("100")); // 100 PAR
-const WETH_AMOUNT = constants.AMOUNT_ACCURACY.mul(new BN("100")); // 100 ETH
+const BORROW_AMOUNT = constants.AMOUNT_ACCURACY.mul(new BN('100')); // 100 PAR
+const WETH_AMOUNT = constants.AMOUNT_ACCURACY.mul(new BN('100')); // 100 ETH
 
 // Tests for individual tests
-contract("VaultsCore vaults", (accounts) => {
+contract('VaultsCore vaults', (accounts) => {
   const [owner, alice, other] = accounts;
 
   let c: {
-    weth: MockWethInstance;
+    weth: MockWETHInstance;
     controller: AccessControllerInstance;
-    stablex: UsdxInstance;
+    stablex: USDXInstance;
     core: VaultsCoreInstance;
     coreState: VaultsCoreStateInstance;
     vaultsData: VaultsDataProviderInstance;
@@ -47,7 +47,7 @@ contract("VaultsCore vaults", (accounts) => {
     await c.weth.mint(alice, WETH_AMOUNT); // Mint some test WETH
   });
 
-  it("user can open a vault via a deposit", async () => {
+  it('user can open a vault via a deposit', async () => {
     await c.weth.approve(c.core.address, 1, { from: alice });
     await c.core.deposit(c.weth.address, 1, { from: alice });
     const newNumberVaults = await c.vaultsData.vaultCount();
@@ -56,21 +56,21 @@ contract("VaultsCore vaults", (accounts) => {
     const vault = await c.vaultsData.vaults(newNumberVaults);
     expect(vault.collateralType.toString()).to.equal(c.weth.address);
     expect(vault.owner.toString()).to.equal(alice);
-    expect(vault.collateralBalance.toString()).to.equal("1"); // Truffle-contract bug?
-    expect(vault.createdAt.toString()).to.not.equal("0");
+    expect(vault.collateralBalance.toString()).to.equal('1'); // Truffle-contract bug?
+    expect(vault.createdAt.toString()).to.not.equal('0');
   });
 
-  it("depositing without sufficient allowance should fail", async () => {
+  it('depositing without sufficient allowance should fail', async () => {
     const allowance = await c.weth.allowance(alice, c.core.address);
     expect(allowance.toNumber()).to.equal(0);
 
     await expectRevert(
       c.core.deposit(c.weth.address, DEPOSIT_AMOUNT, { from: alice }),
-      "ERC20: transfer amount exceeds allowance.",
+      'ERC20: transfer amount exceeds allowance',
     );
   });
 
-  it("depositing with sufficient allowance should add to vault balance", async () => {
+  it('depositing with sufficient allowance should add to vault balance', async () => {
     await c.weth.approve(c.core.address, DEPOSIT_AMOUNT, { from: alice });
 
     const allowance = await c.weth.allowance(alice, c.core.address);
@@ -81,7 +81,7 @@ contract("VaultsCore vaults", (accounts) => {
     });
 
     const vaultId = await c.vaultsData.vaultId(c.weth.address, alice);
-    expectEvent(txReceipt, "Deposited", {
+    expectEvent(txReceipt, 'Deposited', {
       amount: DEPOSIT_AMOUNT.toString(),
       sender: alice,
       vaultId,
@@ -91,7 +91,7 @@ contract("VaultsCore vaults", (accounts) => {
     expect(vault.collateralBalance.toString()).to.equal(DEPOSIT_AMOUNT.toString());
   });
 
-  it("non-owners of a vault cannot withdraw", async () => {
+  it('non-owners of a vault cannot withdraw', async () => {
     await c.weth.approve(c.core.address, DEPOSIT_AMOUNT, { from: alice });
     await c.core.deposit(c.weth.address, DEPOSIT_AMOUNT, { from: alice });
     const vaultId = await c.vaultsData.vaultId(c.weth.address, alice);
@@ -99,20 +99,20 @@ contract("VaultsCore vaults", (accounts) => {
     await expectRevert.unspecified(c.core.withdraw(vaultId, 99, { from: other }));
   });
 
-  it("vault owner cannot withdraw more than vault balance", async () => {
+  it('vault owner cannot withdraw more than vault balance', async () => {
     await c.weth.approve(c.core.address, DEPOSIT_AMOUNT, { from: alice });
     await c.core.deposit(c.weth.address, DEPOSIT_AMOUNT, { from: alice });
     const vaultId = await c.vaultsData.vaultId(c.weth.address, alice);
     await expectRevert.unspecified(c.core.withdraw(vaultId, DEPOSIT_AMOUNT.add(new BN(1)), { from: alice }));
   });
 
-  it("vault owner can withdraw part of his vault collateral", async () => {
+  it('vault owner can withdraw part of his vault collateral', async () => {
     await c.weth.approve(c.core.address, DEPOSIT_AMOUNT, { from: alice });
     await c.core.deposit(c.weth.address, DEPOSIT_AMOUNT, { from: alice });
     const vaultId = await c.vaultsData.vaultId(c.weth.address, alice);
     const txReceipt = await c.core.withdraw(vaultId, DEPOSIT_AMOUNT.div(new BN(2)), { from: alice });
 
-    expectEvent(txReceipt, "Withdrawn", {
+    expectEvent(txReceipt, 'Withdrawn', {
       amount: DEPOSIT_AMOUNT.div(new BN(2)).toString(),
       sender: alice,
       vaultId,
@@ -122,12 +122,12 @@ contract("VaultsCore vaults", (accounts) => {
     assert.equal(vault.collateralBalance.toString(), DEPOSIT_AMOUNT.div(new BN(2)).toString());
   });
 
-  it("vault owner can borrow", async () => {
+  it('vault owner can borrow', async () => {
     await c.weth.approve(c.core.address, DEPOSIT_AMOUNT, { from: alice });
     await c.core.deposit(c.weth.address, DEPOSIT_AMOUNT, { from: alice });
     const vaultId = await c.vaultsData.vaultId(c.weth.address, alice);
     const txReceipt = await c.core.borrow(vaultId, BORROW_AMOUNT, { from: alice });
-    expectEvent(txReceipt, "Borrowed", {
+    expectEvent(txReceipt, 'Borrowed', {
       amount: BORROW_AMOUNT.toString(),
       sender: alice,
       vaultId,
@@ -137,7 +137,7 @@ contract("VaultsCore vaults", (accounts) => {
     assert.equal(outstandingVaultDebt.toString(), BORROW_AMOUNT.toString());
   });
 
-  it("vault owner can borrow with an origination fee", async () => {
+  it('vault owner can borrow with an origination fee', async () => {
     const originationFeePercentage = String(1e16); // 1%
     await c.config.setCollateralOriginationFee(c.weth.address, originationFeePercentage);
 
@@ -145,7 +145,7 @@ contract("VaultsCore vaults", (accounts) => {
     await c.core.deposit(c.weth.address, DEPOSIT_AMOUNT, { from: alice });
     const vaultId = await c.vaultsData.vaultId(c.weth.address, alice);
     const txReceipt = await c.core.borrow(vaultId, BORROW_AMOUNT, { from: alice });
-    expectEvent(txReceipt, "Borrowed", {
+    expectEvent(txReceipt, 'Borrowed', {
       amount: BORROW_AMOUNT.toString(),
       sender: alice,
       vaultId,
@@ -158,7 +158,7 @@ contract("VaultsCore vaults", (accounts) => {
     assert.equal(outstandingVaultDebt.toString(), outstandingDebtPlusFee.toString());
   });
 
-  it("should calculate origination fee correctly after time has passed", async () => {
+  it('should calculate origination fee correctly after time has passed', async () => {
     await c.weth.approve(c.core.address, DEPOSIT_AMOUNT, { from: alice });
     await c.core.deposit(c.weth.address, DEPOSIT_AMOUNT, { from: alice });
     const vaultId = await c.vaultsData.vaultId(c.weth.address, alice);
@@ -166,7 +166,7 @@ contract("VaultsCore vaults", (accounts) => {
     await c.config.setCollateralOriginationFee(c.weth.address, originationFeePercentage);
 
     const borrowReceipt = await c.core.borrow(vaultId, BORROW_AMOUNT, { from: alice });
-    expectEvent(borrowReceipt, "Borrowed", {
+    expectEvent(borrowReceipt, 'Borrowed', {
       amount: BORROW_AMOUNT.toString(),
       sender: alice,
       vaultId,
@@ -181,7 +181,7 @@ contract("VaultsCore vaults", (accounts) => {
 
     const txReceipt = await c.coreState.refresh({ from: other }); // Anyone should be able to call this
     const cumulativeRateUpdatedEvent = _.findWhere(txReceipt.logs, {
-      event: "CumulativeRateUpdated",
+      event: 'CumulativeRateUpdated',
     });
     // @ts-expect-error
     const elapsedTime = new BN(cumulativeRateUpdatedEvent.args.elapsedTime);
@@ -195,9 +195,9 @@ contract("VaultsCore vaults", (accounts) => {
     assert.equal(actualVaultDebt.toString(), expectedVaultDebt.toString());
   });
 
-  it.skip("should calculate income correctly with orignation fee");
+  it.skip('should calculate income correctly with orignation fee');
 
-  it("vault owner can repay partially", async () => {
+  it('vault owner can repay partially', async () => {
     await c.weth.approve(c.core.address, DEPOSIT_AMOUNT, { from: alice });
     await c.core.deposit(c.weth.address, DEPOSIT_AMOUNT, { from: alice });
     const vaultId = await c.vaultsData.vaultId(c.weth.address, alice);
@@ -207,11 +207,11 @@ contract("VaultsCore vaults", (accounts) => {
 
     const outstandingVaultDebt = await c.vaultsData.vaultDebt(vaultId);
 
-    const expectedBalanceOutstanding = BORROW_AMOUNT.sub(new BN("1"));
+    const expectedBalanceOutstanding = BORROW_AMOUNT.sub(new BN('1'));
     assert.equal(outstandingVaultDebt.toString(), expectedBalanceOutstanding.toString());
   });
 
-  it("vault owner can repay fully", async () => {
+  it('vault owner can repay fully', async () => {
     await c.weth.approve(c.core.address, DEPOSIT_AMOUNT, { from: alice });
     await c.core.deposit(c.weth.address, DEPOSIT_AMOUNT, { from: alice });
     const vaultId = await c.vaultsData.vaultId(c.weth.address, alice);
@@ -219,10 +219,10 @@ contract("VaultsCore vaults", (accounts) => {
     await c.core.repay(vaultId, BORROW_AMOUNT, { from: alice });
 
     const outstandingVaultDebt = await c.vaultsData.vaultDebt(vaultId);
-    assert.equal(outstandingVaultDebt.toString(), "0");
+    assert.equal(outstandingVaultDebt.toString(), '0');
   });
 
-  it("vault owner can repay without specifying amount", async () => {
+  it('vault owner can repay without specifying amount', async () => {
     await c.weth.approve(c.core.address, DEPOSIT_AMOUNT, { from: alice });
     await c.core.deposit(c.weth.address, DEPOSIT_AMOUNT, { from: alice });
     const vaultId = await c.vaultsData.vaultId(c.weth.address, alice);
@@ -231,13 +231,13 @@ contract("VaultsCore vaults", (accounts) => {
     await c.core.repayAll(vaultId, { from: alice });
 
     const outstandingVaultDebt = await c.vaultsData.vaultDebt(vaultId);
-    assert.equal(outstandingVaultDebt.toString(), "0");
+    assert.equal(outstandingVaultDebt.toString(), '0');
 
     const newDebt = await c.vaultsData.debt();
-    assert.equal(newDebt.toString(), "0");
+    assert.equal(newDebt.toString(), '0');
   });
 
-  it("vault owner cannot withdraw below the min collateralization ratio", async () => {
+  it('vault owner cannot withdraw below the min collateralization ratio', async () => {
     const open_ratio = String(2e18);
     const deposit_amount = constants.AMOUNT_ACCURACY.mul(new BN(3)).div(new BN(10)); // 0.3 ETH -> 90 PAR value
     const borrow_amount = constants.AMOUNT_ACCURACY.mul(new BN(30)); // 0.2 ETH
@@ -266,7 +266,7 @@ contract("VaultsCore vaults", (accounts) => {
     assert.equal(vault.collateralBalance.toString(), min_deposit.toString());
   });
 
-  it("vault owner cannot borrow and let the health factor go below 1", async () => {
+  it('vault owner cannot borrow and let the health factor go below 1', async () => {
     await c.weth.approve(c.core.address, DEPOSIT_AMOUNT, { from: alice });
     await c.core.deposit(c.weth.address, DEPOSIT_AMOUNT, { from: alice });
     const vaultId = await c.vaultsData.vaultId(c.weth.address, alice);
@@ -288,7 +288,7 @@ contract("VaultsCore vaults", (accounts) => {
       maxBorrow.add(new BN(100)),
       constants.MIN_COLLATERAL_RATIO,
     );
-    assert.equal(healthFactorAboveLimit.toString(), constants.AMOUNT_ACCURACY.sub(new BN("1")).toString());
+    assert.equal(healthFactorAboveLimit.toString(), constants.AMOUNT_ACCURACY.sub(new BN('1')).toString());
     // Try borrow 1 too much
     await expectRevert.unspecified(c.core.borrow(vaultId, maxBorrow.add(new BN(100)), { from: alice }));
 
@@ -298,7 +298,7 @@ contract("VaultsCore vaults", (accounts) => {
     assert.equal(outstandingVaultDebt.toString(), maxBorrow.toString());
   });
 
-  it("borrower should get half stable coin when 1 EUR = 2 USD", async () => {
+  it('borrower should get half stable coin when 1 EUR = 2 USD', async () => {
     await c.aggregatorEUR.setLatestPrice(constants.PRICE_ACCURACY.muln(2));
     await c.weth.approve(c.core.address, DEPOSIT_AMOUNT, { from: alice });
     await c.core.deposit(c.weth.address, DEPOSIT_AMOUNT, { from: alice });
@@ -318,7 +318,7 @@ contract("VaultsCore vaults", (accounts) => {
       maxBorrow.add(new BN(100)),
       constants.MIN_COLLATERAL_RATIO,
     );
-    assert.equal(healthFactorAboveLimit.toString(), constants.AMOUNT_ACCURACY.sub(new BN("1")).toString());
+    assert.equal(healthFactorAboveLimit.toString(), constants.AMOUNT_ACCURACY.sub(new BN('1')).toString());
     // Try borrow 1 too much
     await expectRevert.unspecified(c.core.borrow(vaultId, maxBorrow.add(new BN(100)), { from: alice }));
 
@@ -328,8 +328,8 @@ contract("VaultsCore vaults", (accounts) => {
     assert.equal(outstandingVaultDebt.toString(), maxBorrow.toString());
   });
 
-  it("should support buggy ERC20 interface", async () => {
-    const BUG = await MockBuggyERC20.new("Buggy ERC20", "BUG");
+  it('should support buggy ERC20 interface', async () => {
+    const BUG = await MockBuggyERC20.new('Buggy ERC20', 'BUG');
     await BUG.mint(other, WETH_AMOUNT);
     await setCollateralConfig(c.config, { collateralType: BUG.address, borrowRate: constants.RATE_0BPS });
 
@@ -351,7 +351,7 @@ contract("VaultsCore vaults", (accounts) => {
     // Now withdraw some collateral to test `safeTransfer` works
     const withdrawTxReceipt = await c.core.withdraw(vaultId, DEPOSIT_AMOUNT.div(new BN(2)), { from: other });
 
-    expectEvent(withdrawTxReceipt, "Withdrawn", {
+    expectEvent(withdrawTxReceipt, 'Withdrawn', {
       amount: DEPOSIT_AMOUNT.div(new BN(2)).toString(),
       sender: other,
       vaultId,
@@ -361,19 +361,19 @@ contract("VaultsCore vaults", (accounts) => {
     assert.equal(vaultAfterWithdrawal.collateralBalance.toString(), DEPOSIT_AMOUNT.div(new BN(2)).toString());
   });
 
-  it("should be possible to deposit and borrow from a new vault", async () => {
+  it('should be possible to deposit and borrow from a new vault', async () => {
     await c.weth.approve(c.core.address, DEPOSIT_AMOUNT, { from: alice });
     // Const vault = await c.vaultsData.vaults(vaultId);
     const txReceipt = await c.core.depositAndBorrow(c.weth.address, DEPOSIT_AMOUNT, BORROW_AMOUNT, { from: alice });
     const vaultId = await c.vaultsData.vaultId(c.weth.address, alice);
 
-    expectEvent(txReceipt, "Deposited", {
+    expectEvent(txReceipt, 'Deposited', {
       amount: DEPOSIT_AMOUNT.toString(),
       sender: alice,
       vaultId,
     });
 
-    expectEvent(txReceipt, "Borrowed", {
+    expectEvent(txReceipt, 'Borrowed', {
       amount: BORROW_AMOUNT.toString(),
       sender: alice,
       vaultId,
@@ -383,7 +383,7 @@ contract("VaultsCore vaults", (accounts) => {
     assert.equal(outstandingVaultDebt.toString(), BORROW_AMOUNT.toString());
   });
 
-  it("should be possible to deposit and borrow from an existing vault", async () => {
+  it('should be possible to deposit and borrow from an existing vault', async () => {
     await c.weth.approve(c.core.address, DEPOSIT_AMOUNT.mul(new BN(2)), { from: alice });
     // Const vault = await c.vaultsData.vaults(vaultId);
     await c.core.depositAndBorrow(c.weth.address, DEPOSIT_AMOUNT, BORROW_AMOUNT, { from: alice });
@@ -394,14 +394,14 @@ contract("VaultsCore vaults", (accounts) => {
     assert.strictEqual(
       vault.collateralBalance,
       DEPOSIT_AMOUNT.mul(new BN(2)).toString(),
-      "expected double deposit amount as collateral",
+      'expected double deposit amount as collateral',
     );
 
     const outstandingVaultDebt = await c.vaultsData.vaultDebt(vaultId);
     assert.equal(outstandingVaultDebt.toString(), BORROW_AMOUNT.mul(new BN(2)).toString());
   });
 
-  it("should be possible to deposit by vault id by another account", async () => {
+  it('should be possible to deposit by vault id by another account', async () => {
     await c.weth.approve(c.core.address, DEPOSIT_AMOUNT, { from: alice });
     await c.core.deposit(c.weth.address, DEPOSIT_AMOUNT, { from: alice });
     const vaultId = await c.vaultsData.vaultId(c.weth.address, alice);
@@ -415,19 +415,19 @@ contract("VaultsCore vaults", (accounts) => {
     assert.equal(vault.collateralBalance.toString(), DEPOSIT_AMOUNT.mul(new BN(2)).toString());
   });
 
-  it("should not allow non-WETH address send ETH directly", async () => {
+  it('should not allow non-WETH address send ETH directly', async () => {
     await expectRevert.unspecified(
       web3.eth.sendTransaction({ from: alice, to: c.core.address, value: DEPOSIT_AMOUNT }),
     );
   });
 
-  describe("ETH support", () => {
-    it("should allow to deposit ETH into a vault", async () => {
-      const depositETHAmount = new BN("1000");
+  describe('ETH support', () => {
+    it('should allow to deposit ETH into a vault', async () => {
+      const depositETHAmount = new BN('1000');
       const ethBalanceBefore = await web3.eth.getBalance(alice);
 
       const coreWethBalanceBefore = await c.weth.balanceOf(c.core.address);
-      assert.equal(coreWethBalanceBefore.toString(), "0", "expected the core to have WETH now");
+      assert.equal(coreWethBalanceBefore.toString(), '0', 'expected the core to have WETH now');
 
       const txReceipt = await c.core.depositETH({ from: alice, value: depositETHAmount });
       const txFee = await getTxFee(txReceipt);
@@ -436,11 +436,11 @@ contract("VaultsCore vaults", (accounts) => {
       assert.strictEqual(
         wethETHBalance.toString(),
         depositETHAmount.toString(),
-        "expected the WETH contract to have received the deposit amount",
+        'expected the WETH contract to have received the deposit amount',
       );
 
       const coreWethBalanceAfter = await c.weth.balanceOf(c.core.address);
-      assert.equal(coreWethBalanceAfter.toString(), depositETHAmount.toString(), "expected the core to have WETH now");
+      assert.equal(coreWethBalanceAfter.toString(), depositETHAmount.toString(), 'expected the core to have WETH now');
 
       const ethBalanceAfter = await web3.eth.getBalance(alice);
       const expectedBalanceAfter = new BN(ethBalanceBefore).sub(txFee).sub(depositETHAmount);
@@ -452,7 +452,7 @@ contract("VaultsCore vaults", (accounts) => {
       assert.strictEqual(vault.collateralBalance.toString(), depositETHAmount.toString());
     });
 
-    it("should be possible to deposit by vault id by another account with ETH", async () => {
+    it('should be possible to deposit by vault id by another account with ETH', async () => {
       await c.core.depositETH({ from: alice, value: DEPOSIT_AMOUNT });
       const vaultId = await c.vaultsData.vaultId(c.weth.address, alice);
 
@@ -463,8 +463,8 @@ contract("VaultsCore vaults", (accounts) => {
       assert.equal(vault.collateralBalance.toString(), DEPOSIT_AMOUNT.mul(new BN(2)).toString());
     });
 
-    it("should allow withdrawal of ETH from a WETH vault", async () => {
-      const depositETHAmount = new BN("1000");
+    it('should allow withdrawal of ETH from a WETH vault', async () => {
+      const depositETHAmount = new BN('1000');
       const ethBalanceBefore = await web3.eth.getBalance(alice);
       const txReceipt = await c.core.depositETH({ from: alice, value: depositETHAmount });
       const vaultId = await c.vaultsData.vaultId(c.weth.address, alice);
@@ -474,7 +474,7 @@ contract("VaultsCore vaults", (accounts) => {
       assert.equal(
         coreWethBalanceAfterDeposit.toString(),
         depositETHAmount.toString(),
-        "expected the core to have WETH now",
+        'expected the core to have WETH now',
       );
 
       const withdrawTxReceipt = await c.core.withdrawETH(vaultId, depositETHAmount, { from: alice });
@@ -486,11 +486,11 @@ contract("VaultsCore vaults", (accounts) => {
       assert.strictEqual(ethBalanceAfter, expectedEthBalancerAfter.toString());
 
       const coreWethBalanceAfterWithdrawal = await c.weth.balanceOf(c.core.address);
-      assert.equal(coreWethBalanceAfterWithdrawal.toString(), "0", "expected to have withdrawn all ETH");
+      assert.equal(coreWethBalanceAfterWithdrawal.toString(), '0', 'expected to have withdrawn all ETH');
     });
 
-    it("should not allow withdrawal of ETH from non WETH vault", async () => {
-      const depositAmount = new BN("1000");
+    it('should not allow withdrawal of ETH from non WETH vault', async () => {
+      const depositAmount = new BN('1000');
       const wbtc = await WBTC.new();
       await wbtc.mint(alice, depositAmount);
       await wbtc.approve(c.core.address, depositAmount, { from: alice });
@@ -506,30 +506,30 @@ contract("VaultsCore vaults", (accounts) => {
       await expectRevert.unspecified(c.core.withdrawETH(vaultId, depositAmount, { from: alice }));
     });
 
-    it("depositing WBTC while sending ETH should revert", async () => {
-      const depositAmount = new BN("1000");
+    it('depositing WBTC while sending ETH should revert', async () => {
+      const depositAmount = new BN('1000');
       const wbtc = await WBTC.new();
       await wbtc.mint(alice, depositAmount);
       await wbtc.approve(c.core.address, depositAmount, { from: alice });
       await setCollateralConfig(c.config, { collateralType: wbtc.address, borrowRate: constants.RATE_0BPS });
 
-      await expectRevert.unspecified(c.core.deposit(wbtc.address, "1000", { from: alice, value: depositAmount }));
+      await expectRevert.unspecified(c.core.deposit(wbtc.address, '1000', { from: alice, value: depositAmount }));
 
       // Doing a normal deposit to be sure that works
       await c.core.deposit(wbtc.address, depositAmount, { from: alice });
     });
 
-    it("should be possible to deposit and borrow using ETH", async () => {
+    it('should be possible to deposit and borrow using ETH', async () => {
       const txReceipt = await c.core.depositETHAndBorrow(BORROW_AMOUNT, { from: alice, value: DEPOSIT_AMOUNT });
       const vaultId = await c.vaultsData.vaultId(c.weth.address, alice);
 
-      expectEvent(txReceipt, "Deposited", {
+      expectEvent(txReceipt, 'Deposited', {
         amount: DEPOSIT_AMOUNT.toString(),
         sender: alice,
         vaultId,
       });
 
-      expectEvent(txReceipt, "Borrowed", {
+      expectEvent(txReceipt, 'Borrowed', {
         amount: BORROW_AMOUNT.toString(),
         sender: alice,
         vaultId,
@@ -540,12 +540,12 @@ contract("VaultsCore vaults", (accounts) => {
     });
   });
 
-  it.skip("should properly account for over-repayment");
-  it.skip("should not allow to open vault with not authorized collateral");
+  it.skip('should properly account for over-repayment');
+  it.skip('should not allow to open vault with not authorized collateral');
 
   // Enforce limits
-  it.skip("Should not allow to borrow below the minimum to allow for efficient liquidiation (gas costs)");
+  it.skip('Should not allow to borrow below the minimum to allow for efficient liquidiation (gas costs)');
 
   // Configuration
-  it.skip("should throw proper error when accessing non-existant vault");
+  it.skip('should throw proper error when accessing non-existant vault');
 });
