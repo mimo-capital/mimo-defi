@@ -22,7 +22,7 @@
     "test:governance": "yarn clean && yarn compile && truffle test ./build/test/governance/**",
     "retest:governance": "yarn tsc && truffle test ./build/test/governance/**",
     "xo-fix": "xo --fix",
-    "prettier": "./node_modules/.bin/prettier --write ./test/**",
+    "prettier": "./node_modules/.bin/prettier --write ./test/** ./scripts/**",
     "prettier:solidity": "./node_modules/.bin/prettier --write contracts/**/**",
     "generate-merkle-root": "ts-node merkle/generate-merkle-root.ts merkle/input.json",
     "verify-merkle-root": "ts-node merkle/verify-merkle-root.ts merkle/output.json",

@@ -1,4 +1,4 @@
-import { getChainId, ethers, network } from 'hardhat';
+import { getChainId, ethers, network } from "hardhat";
 import {
   NETWORK_CONFIG,
   NetworkConfig,
@@ -6,15 +6,15 @@ import {
   COLLATERALS,
   VOTING_ESCROW_SYMBOL,
   VOTING_ESCROW_NAME,
-} from '../../config/deployment';
-import { expect } from 'chai';
-import { Contract } from 'ethers';
-import { AddressLike } from 'ethereumjs-util';
-import { capitalizeFirstLetter } from '../../utils/helper';
-import mimoDistributorAbi from '../../utils/abis/MimoDistributor';
-import mimoAbi from '../../utils/abis/Mimo';
-import { BigNumber } from '@ethersproject/bignumber';
-import { existsSync, readFileSync } from 'fs';
+} from "../../config/deployment";
+import { expect } from "chai";
+import { Contract } from "ethers";
+import { AddressLike } from "ethereumjs-util";
+import { capitalizeFirstLetter } from "../../utils/helper";
+import mimoDistributorAbi from "../../utils/abis/MimoDistributor";
+import mimoAbi from "../../utils/abis/Mimo";
+import { BigNumber } from "@ethersproject/bignumber";
+import { existsSync, readFileSync } from "fs";
 
 let chainId: string;
 let networkConfig: NetworkConfig;
@@ -46,7 +46,7 @@ before(async () => {
   chainId = await getChainId();
   networkConfig = NETWORK_CONFIG[Number.parseInt(chainId)];
   deployedContracts = JSON.parse(
-    readFileSync(`./reports/${network.name === 'hardhat' ? 'localhost' : network.name}/deployment.json`).toString(),
+    readFileSync(`./reports/${network.name === "hardhat" ? "localhost" : network.name}/deployment.json`).toString(),
   ).contracts;
   try {
     [
@@ -96,7 +96,7 @@ before(async () => {
   mimo = networkConfig.isTestNet
     ? await ethers.getContractAt(deployedContracts.MockMIMO.abi, deployedContracts.MockMIMO.address)
     : await ethers.getContractAt(mimoAbi, networkConfig.mimoToken);
-  const ethereumProvider = ethers.getDefaultProvider('mainnet', {
+  const ethereumProvider = ethers.getDefaultProvider("mainnet", {
     infura: process.env.INFURA_TOKEN,
   });
   networkTitle = capitalizeFirstLetter(network.name);
@@ -111,8 +111,8 @@ before(async () => {
   }
 });
 
-describe('--- Verify Core Deployment ---', async () => {
-  it('Check AccessController', async () => {
+describe("--- Verify Core Deployment ---", async () => {
+  it("Check AccessController", async () => {
     const [MANAGER_ROLE, MINTER_ROLE] = await Promise.all([
       accessController.MANAGER_ROLE(),
       accessController.MINTER_ROLE(),
@@ -141,7 +141,7 @@ describe('--- Verify Core Deployment ---', async () => {
       expect(mimoMinterRoleCount.toNumber()).to.be.equal(1);
     }
   });
-  it('Check AddressProvider', async () => {
+  it("Check AddressProvider", async () => {
     const [
       setController,
       setConfig,
@@ -174,7 +174,7 @@ describe('--- Verify Core Deployment ---', async () => {
     expect(setVaultsData).to.be.equal(vaultsDataProvider.address);
     expect(setFeeDistributor).to.be.equal(feeDistributor.address);
   });
-  it('Check ConfigProvier', async () => {
+  it("Check ConfigProvier", async () => {
     try {
       const [numCollateralConfigs, a] = await Promise.all([configProvider.numCollateralConfigs(), configProvider.a()]);
       const collateralList = Object.keys(networkConfig.collaterals);
@@ -182,7 +182,7 @@ describe('--- Verify Core Deployment ---', async () => {
       expect(a).to.be.equal(addressProvider.address);
       for (const element of collateralList) {
         let collateral = networkConfig.collaterals[element].address;
-        if (networkConfig.isTestNet && collateral === '') {
+        if (networkConfig.isTestNet && collateral === "") {
           collateral = deployedContracts[`Mock${element}`].address;
         }
 
@@ -207,20 +207,20 @@ describe('--- Verify Core Deployment ---', async () => {
       console.log(error);
     }
   });
-  it('Check PAR', async () => {
+  it("Check PAR", async () => {
     const a = await par.a();
     expect(a).to.be.equal(addressProvider.address);
   });
-  it('Check PriceFeed', async () => {
+  it("Check PriceFeed", async () => {
     const collateralList = Object.keys(networkConfig.collaterals);
     for (const element of collateralList) {
       let collateralUsdAggregator = networkConfig.collaterals[element].usdAggregator;
       let collateral = networkConfig.collaterals[element].address;
-      if (collateralUsdAggregator === '') {
+      if (collateralUsdAggregator === "") {
         collateralUsdAggregator = deployedContracts[`${element}UsdAggregator`].address;
       }
 
-      if (networkConfig.isTestNet && collateral === '') {
+      if (networkConfig.isTestNet && collateral === "") {
         collateral = deployedContracts[`Mock${element}`].address;
       }
 
@@ -229,7 +229,7 @@ describe('--- Verify Core Deployment ---', async () => {
     }
 
     let { eurUsdAggregator } = networkConfig;
-    if (eurUsdAggregator === '') {
+    if (eurUsdAggregator === "") {
       eurUsdAggregator = deployedContracts.EurUsdAggregator.address;
     }
 
@@ -237,15 +237,15 @@ describe('--- Verify Core Deployment ---', async () => {
     expect(eurOracle).to.be.equal(eurUsdAggregator);
     expect(a).to.be.equal(addressProvider.address);
   });
-  it('Check RatesManager', async () => {
+  it("Check RatesManager", async () => {
     const a = await ratesManager.a();
     expect(a).to.be.equal(addressProvider.address);
   });
-  it('Check LiquidationManager', async () => {
+  it("Check LiquidationManager", async () => {
     const a = await liquidationManager.a();
     expect(a).to.be.equal(addressProvider.address);
   });
-  it('Check FeeDistributor', async () => {
+  it("Check FeeDistributor", async () => {
     const [payees, totalShares, vaultsCoreShare, a] = await Promise.all([
       feeDistributor.getPayees(),
       feeDistributor.totalShares(),
@@ -258,17 +258,17 @@ describe('--- Verify Core Deployment ---', async () => {
     expect(totalShares.toNumber()).to.be.equal(100);
     expect(vaultsCoreShare.toNumber()).to.be.equal(100);
   });
-  it('Check VaultsDataProvider', async () => {
+  it("Check VaultsDataProvider", async () => {
     const a = await vaultsDataProvider.a();
     expect(a).to.be.equal(addressProvider.address);
   });
-  it('Check VaultsCoreState', async () => {
+  it("Check VaultsCoreState", async () => {
     const a = await vaultsCoreState.a();
     expect(a).to.be.equal(addressProvider.address);
   });
-  it('Check VaultsCore', async () => {
+  it("Check VaultsCore", async () => {
     let WETH = networkConfig.collaterals[networkConfig.baseToken].address;
-    if (networkConfig.isTestNet && WETH === '') {
+    if (networkConfig.isTestNet && WETH === "") {
       WETH = deployedContracts[`Mock${networkConfig.baseToken}`].address;
     }
 
@@ -285,8 +285,8 @@ describe('--- Verify Core Deployment ---', async () => {
   });
 });
 
-describe('--- Verify Governance ---', async () => {
-  it('Check GovernanceAddressProvider', async () => {
+describe("--- Verify Governance ---", async () => {
+  it("Check GovernanceAddressProvider", async () => {
     const [parallel, setMimo, setDebtNotifier, setGovernorAlpha, setTimelock, setVotingEscrow] = await Promise.all([
       governanceAddressProvider.parallel(),
       governanceAddressProvider.mimo(),
@@ -302,7 +302,7 @@ describe('--- Verify Governance ---', async () => {
     expect(setTimelock).to.be.equal(timelock.address);
     expect(setVotingEscrow).to.be.equal(votingEscrow.address);
   });
-  it('Check DebtNotifier', async () => {
+  it("Check DebtNotifier", async () => {
     const collateralList = Object.keys(networkConfig.collaterals);
     for (const element of collateralList) {
       const supplyMiner = await ethers.getContractAt(
@@ -310,7 +310,7 @@ describe('--- Verify Governance ---', async () => {
         deployedContracts[`${element}SupplyMiner`].address,
       );
       let collateral = networkConfig.collaterals[element].address;
-      if (networkConfig.isTestNet && collateral === '') {
+      if (networkConfig.isTestNet && collateral === "") {
         collateral = deployedContracts[`Mock${element}`].address;
       }
 
@@ -321,7 +321,7 @@ describe('--- Verify Governance ---', async () => {
     const a = await debtNotifier.a();
     expect(a).to.be.equal(governanceAddressProvider.address);
   });
-  it('Check SupplyMiners', async () => {
+  it("Check SupplyMiners", async () => {
     const collateralList = Object.keys(networkConfig.collaterals);
     for (const element of collateralList) {
       const supplyMiner = await ethers.getContractAt(
@@ -332,7 +332,7 @@ describe('--- Verify Governance ---', async () => {
       expect(a).to.be.equal(governanceAddressProvider.address);
     }
   });
-  it('Check VotingEscrow', async () => {
+  it("Check VotingEscrow", async () => {
     const [a, stakingToken, symbol, name, miner] = await Promise.all([
       votingEscrow.a(),
       votingEscrow.stakingToken(),
@@ -346,11 +346,11 @@ describe('--- Verify Governance ---', async () => {
     expect(name).to.be.equal(VOTING_ESCROW_NAME);
     expect(miner).to.be.equal(votingMiner.address);
   });
-  it('Check GovernorAlpha', async () => {
+  it("Check GovernorAlpha", async () => {
     const a = await governorAlpha.a();
     expect(a).to.be.equal(governanceAddressProvider.address);
   });
-  it('Check ChainDistributor', async () => {
+  it("Check ChainDistributor", async () => {
     if (chainDistributor) {
       const collateralList = Object.keys(networkConfig.collaterals);
       const supplyMiners: AddressLike[] = [];
@@ -374,7 +374,7 @@ describe('--- Verify Governance ---', async () => {
       expect(setRootChainManager).to.be.equal(MAINNET_CONTRACTS.RootChainManager);
       expect(setErc20Predicate).to.be.equal(MAINNET_CONTRACTS.ERC20PredicateProxy);
     } else {
-      console.log('No ChainDistributor deployed');
+      console.log("No ChainDistributor deployed");
     }
   });
 });

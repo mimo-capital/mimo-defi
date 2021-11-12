@@ -1,10 +1,10 @@
-import { getChainId, ethers, network } from 'hardhat';
-import { NETWORK_CONFIG, NetworkConfig, MAINNET_CONTRACTS, COLLATERALS } from '../../config/deployment';
-import { expect } from 'chai';
-import { Contract } from 'ethers';
-import mimoAbi from '../../utils/abis/Mimo';
-import { BigNumber } from '@ethersproject/bignumber';
-import { readFileSync } from 'fs';
+import { getChainId, ethers, network } from "hardhat";
+import { NETWORK_CONFIG, NetworkConfig, MAINNET_CONTRACTS, COLLATERALS } from "../../config/deployment";
+import { expect } from "chai";
+import { Contract } from "ethers";
+import mimoAbi from "../../utils/abis/Mimo";
+import { BigNumber } from "@ethersproject/bignumber";
+import { readFileSync } from "fs";
 
 let chainId: string;
 let networkConfig: NetworkConfig;
@@ -26,7 +26,7 @@ before(async () => {
   chainId = await getChainId();
   networkConfig = NETWORK_CONFIG[Number.parseInt(chainId)];
   deployedContracts = JSON.parse(
-    readFileSync(`./reports/${network.name === 'hardhat' ? 'localhost' : network.name}/deployment.json`).toString(),
+    readFileSync(`./reports/${network.name === "hardhat" ? "localhost" : network.name}/deployment.json`).toString(),
   ).contracts;
   try {
     [
@@ -63,8 +63,8 @@ before(async () => {
     : await ethers.getContractAt(mimoAbi, networkConfig.mimoToken);
 });
 
-describe('--- Verify Core Deployment ---', async () => {
-  it('Check AccessController', async () => {
+describe("--- Verify Core Deployment ---", async () => {
+  it("Check AccessController", async () => {
     try {
       const [MANAGER_ROLE, MINTER_ROLE] = await Promise.all([
         accessController.MANAGER_ROLE(),
@@ -96,7 +96,7 @@ describe('--- Verify Core Deployment ---', async () => {
       console.log(error);
     }
   });
-  it('Check AddressProvider', async () => {
+  it("Check AddressProvider", async () => {
     const [
       setController,
       setConfig,
@@ -129,14 +129,14 @@ describe('--- Verify Core Deployment ---', async () => {
     expect(setVaultsData).to.be.equal(vaultsDataProvider.address);
     expect(setFeeDistributor).to.be.equal(feeDistributor.address);
   });
-  it('Check ConfigProvier', async () => {
+  it("Check ConfigProvier", async () => {
     const [numCollateralConfigs, a] = await Promise.all([configProvider.numCollateralConfigs(), configProvider.a()]);
     const collateralList = Object.keys(networkConfig.collaterals);
     expect(numCollateralConfigs.toNumber()).to.be.equal(collateralList.length);
     expect(a).to.be.equal(addressProvider.address);
     for (const element of collateralList) {
       let collateral = networkConfig.collaterals[element].address;
-      if (networkConfig.isTestNet && collateral === '') {
+      if (networkConfig.isTestNet && collateral === "") {
         collateral = deployedContracts[`Mock${element}`].address;
       }
 
@@ -158,20 +158,20 @@ describe('--- Verify Core Deployment ---', async () => {
       expect(collateralConfig.liquidationFee.toString()).to.be.equal(COLLATERALS[element].liquidationFee.toString());
     }
   });
-  it('Check PAR', async () => {
+  it("Check PAR", async () => {
     const a = await par.a();
     expect(a).to.be.equal(addressProvider.address);
   });
-  it('Check PriceFeed', async () => {
+  it("Check PriceFeed", async () => {
     const collateralList = Object.keys(networkConfig.collaterals);
     for (const element of collateralList) {
       let collateralUsdAggregator = networkConfig.collaterals[element].usdAggregator;
       let collateral = networkConfig.collaterals[element].address;
-      if (collateralUsdAggregator === '') {
+      if (collateralUsdAggregator === "") {
         collateralUsdAggregator = deployedContracts[`${element}UsdAggregator`].address;
       }
 
-      if (networkConfig.isTestNet && collateral === '') {
+      if (networkConfig.isTestNet && collateral === "") {
         collateral = deployedContracts[`Mock${element}`].address;
       }
 
@@ -180,7 +180,7 @@ describe('--- Verify Core Deployment ---', async () => {
     }
 
     let { eurUsdAggregator } = networkConfig;
-    if (eurUsdAggregator === '') {
+    if (eurUsdAggregator === "") {
       eurUsdAggregator = deployedContracts.EurUsdAggregator.address;
     }
 
@@ -188,15 +188,15 @@ describe('--- Verify Core Deployment ---', async () => {
     expect(eurOracle).to.be.equal(eurUsdAggregator);
     expect(a).to.be.equal(addressProvider.address);
   });
-  it('Check RatesManager', async () => {
+  it("Check RatesManager", async () => {
     const a = await ratesManager.a();
     expect(a).to.be.equal(addressProvider.address);
   });
-  it('Check LiquidationManager', async () => {
+  it("Check LiquidationManager", async () => {
     const a = await liquidationManager.a();
     expect(a).to.be.equal(addressProvider.address);
   });
-  it('Check FeeDistributor', async () => {
+  it("Check FeeDistributor", async () => {
     const [payees, totalShares, vaultsCoreShare, a] = await Promise.all([
       feeDistributor.getPayees(),
       feeDistributor.totalShares(),
@@ -209,17 +209,17 @@ describe('--- Verify Core Deployment ---', async () => {
     expect(totalShares.toNumber()).to.be.equal(100);
     expect(vaultsCoreShare.toNumber()).to.be.equal(100);
   });
-  it('Check VaultsDataProvider', async () => {
+  it("Check VaultsDataProvider", async () => {
     const a = await vaultsDataProvider.a();
     expect(a).to.be.equal(addressProvider.address);
   });
-  it('Check VaultsCoreState', async () => {
+  it("Check VaultsCoreState", async () => {
     const a = await vaultsCoreState.a();
     expect(a).to.be.equal(addressProvider.address);
   });
-  it('Check VaultsCore', async () => {
+  it("Check VaultsCore", async () => {
     let WETH = networkConfig.collaterals[networkConfig.baseToken].address;
-    if (networkConfig.isTestNet && WETH === '') {
+    if (networkConfig.isTestNet && WETH === "") {
       WETH = deployedContracts[`Mock${networkConfig.baseToken}`].address;
     }
 
