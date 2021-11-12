@@ -2,10 +2,10 @@ import {
   VaultsCoreInstance,
   VaultsCoreStateInstance,
   VaultsDataProviderInstance,
-  MockWethInstance,
+  MockWETHInstance,
   RatesManagerInstance,
   AccessControllerInstance,
-  UsdxInstance,
+  USDXInstance,
   PriceFeedInstance,
   MockChainlinkAggregatorInstance,
   LiquidationManagerInstance,
@@ -29,9 +29,9 @@ contract("VaultsCore vaults", (accounts) => {
   const [owner, alice, other] = accounts;
 
   let c: {
-    weth: MockWethInstance;
+    weth: MockWETHInstance;
     controller: AccessControllerInstance;
-    stablex: UsdxInstance;
+    stablex: USDXInstance;
     core: VaultsCoreInstance;
     coreState: VaultsCoreStateInstance;
     vaultsData: VaultsDataProviderInstance;
@@ -66,7 +66,7 @@ contract("VaultsCore vaults", (accounts) => {
 
     await expectRevert(
       c.core.deposit(c.weth.address, DEPOSIT_AMOUNT, { from: alice }),
-      "ERC20: transfer amount exceeds allowance.",
+      "ERC20: transfer amount exceeds allowance",
     );
   });
 

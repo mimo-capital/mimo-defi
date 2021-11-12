@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0
 /* solium-disable security/no-block-members */
+pragma experimental ABIEncoderV2;
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import "./interfaces/IVotingEscrow.sol";
-import "../interfaces/IAccessController.sol";
+import "./interfaces/IGovernanceAddressProvider.sol";
+import "../liquidityMining/interfaces/IGenericMiner.sol";
 
 /**
  * @title  VotingEscrow
@@ -21,38 +23,42 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard {
   using SafeERC20 for IERC20;
 
   uint256 public constant MAXTIME = 1460 days; // 365 * 4 years
+  uint256 public minimumLockTime = 1 days;
   bool public expired = false;
   IERC20 public override stakingToken;
 
   mapping(address => LockedBalance) public locked;
 
-  // Voting token - Checkpointed view only ERC20
   string public override name;
   string public override symbol;
   // solhint-disable-next-line
   uint256 public constant override decimals = 18;
 
-  // Access
-  IAccessController public controller;
+  // AddressProvider
+  IGovernanceAddressProvider public a;
+  IGenericMiner public miner;
 
   constructor(
     IERC20 _stakingToken,
-    IAccessController _controller,
+    IGovernanceAddressProvider _a,
+    IGenericMiner _miner,
     string memory _name,
     string memory _symbol
   ) public {
     require(address(_stakingToken) != address(0));
-    require(address(_controller) != address(0));
+    require(address(_a) != address(0));
+    require(address(_miner) != address(0));
 
     stakingToken = _stakingToken;
-    controller = _controller;
+    a = _a;
+    miner = _miner;
 
     name = _name;
     symbol = _symbol;
   }
 
   modifier onlyManager() {
-    require(controller.hasRole(controller.MANAGER_ROLE(), msg.sender), "Caller is not a Manager");
+    require(a.controller().hasRole(a.controller().MANAGER_ROLE(), msg.sender), "Caller is not a Manager");
     _;
   }
 
@@ -73,6 +79,7 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard {
     require(_value > 0, "Must stake non zero amount");
     require(locked_.amount == 0, "Withdraw old tokens first");
     require(_unlockTime > block.timestamp, "Can only lock until time in the future");
+    require(_unlockTime.sub(block.timestamp) > minimumLockTime, "Lock duration should be larger than minimum locktime");
 
     _depositFor(msg.sender, _value, _unlockTime, locked_, LockAction.CREATE_LOCK);
   }
@@ -101,6 +108,7 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard {
     require(locked_.amount > 0, "Nothing is locked");
     require(locked_.end > block.timestamp, "Lock expired");
     require(_unlockTime > locked_.end, "Can only increase lock time");
+    require(_unlockTime.sub(locked_.end) > minimumLockTime, "Lock duration should be larger than minimum locktime");
 
     _depositFor(msg.sender, 0, _unlockTime, locked_, LockAction.INCREASE_LOCK_TIME);
   }
@@ -119,6 +127,22 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard {
   function expireContract() external override onlyManager contractNotExpired {
     expired = true;
     emit Expired();
+  }
+
+  /**
+   * @dev Set miner address.
+   * @param _miner new miner contract address
+   */
+  function setMiner(IGenericMiner _miner) external override onlyManager contractNotExpired {
+    miner = _miner;
+  }
+
+  /**
+   * @dev Set minimumLockTime.
+   * @param _minimumLockTime minimum lockTime
+   */
+  function setMinimumLockTime(uint256 _minimumLockTime) external override onlyManager contractNotExpired {
+    minimumLockTime = _minimumLockTime;
   }
 
   /***************************************
@@ -182,6 +206,8 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard {
       stakingToken.safeTransferFrom(_addr, address(this), _value);
     }
 
+    miner.releaseMIMO(_addr);
+
     emit Deposit(_addr, _value, newLocked.end, _action, block.timestamp);
   }
 
@@ -200,6 +226,7 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard {
     locked[_addr] = currentLock;
 
     stakingToken.safeTransfer(_addr, value);
+    miner.releaseMIMO(_addr);
 
     emit Withdraw(_addr, value, block.timestamp);
   }

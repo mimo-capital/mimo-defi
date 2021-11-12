@@ -73,25 +73,16 @@ contract("Timelock", (accounts) => {
   });
 
   it("setDelay() requires msg.sender to be Timelock", async () => {
-    await expectRevert(
-      timelock.setDelay(DELAY, { from: admin }),
-      "revert Timelock::setDelay: Call must come from Timelock.",
-    );
+    await expectRevert(timelock.setDelay(DELAY, { from: admin }), "Call must come from Timelock.");
   });
 
   it("setPendingAdmin() requires msg.sender to be Timelock", async () => {
-    await expectRevert(
-      timelock.setPendingAdmin(newAdmin, { from: admin }),
-      "revert Timelock::setPendingAdmin: Call must come from Timelock.",
-    );
+    await expectRevert(timelock.setPendingAdmin(newAdmin, { from: admin }), "Call must come from Timelock.");
   });
 
   it("setPendingAdmin() requires msg.sender to be Timelock", async () => {
     await timelock.harnessSetAdmin(newAdmin);
-    await expectRevert(
-      timelock.acceptAdmin({ from: notAdmin }),
-      "revert Timelock::acceptAdmin: Call must come from pendingAdmin.",
-    );
+    await expectRevert(timelock.acceptAdmin({ from: notAdmin }), "Call must come from pendingAdmin.");
   });
 
   it("setPendingAdmin() sets pendingAdmin to address 0 and changes admin", async () => {
@@ -115,7 +106,7 @@ contract("Timelock", (accounts) => {
     const { target, value, signature, data, eta } = await buildSetDelayTransaction();
     await expectRevert(
       timelock.queueTransaction(target, value, signature, data, eta, { from: notAdmin }),
-      "revert Timelock::queueTransaction: Call must come from admin.",
+      "Call must come from admin.",
     );
   });
 
@@ -124,7 +115,7 @@ contract("Timelock", (accounts) => {
     const etaLessThanDelay = eta.sub(BUFFER).sub(new BN(1));
     await expectRevert(
       timelock.queueTransaction(target, value, signature, data, etaLessThanDelay, { from: admin }),
-      "revert Timelock::queueTransaction: Estimated execution block must satisfy delay.",
+      "Estimated execution block must satisfy delay.",
     );
   });
 
@@ -158,7 +149,7 @@ contract("Timelock", (accounts) => {
     const { target, value, signature, data, eta } = await buildSetDelayTransaction();
     await expectRevert(
       timelock.cancelTransaction(target, value, signature, data, eta, { from: notAdmin }),
-      "revert Timelock::cancelTransaction: Call must come from admin.",
+      "Call must come from admin.",
     );
   });
 
@@ -192,7 +183,7 @@ contract("Timelock", (accounts) => {
     const { target, value, signature, data, eta } = await buildSetPendingAdminTransaction();
     await expectRevert(
       timelock.executeTransaction(target, value, signature, data, eta, { from: notAdmin }),
-      "revert Timelock::executeTransaction: Call must come from admin.",
+      "Call must come from admin.",
     );
   });
 
@@ -201,7 +192,7 @@ contract("Timelock", (accounts) => {
     const differentEta = eta.sub(new BN(10));
     await expectRevert(
       timelock.executeTransaction(target, value, signature, data, differentEta, { from: admin }),
-      "revert Timelock::executeTransaction: Transaction hasn't been queued.",
+      "Transaction hasn't been queued.",
     );
   });
 
@@ -209,7 +200,7 @@ contract("Timelock", (accounts) => {
     const { target, value, signature, data, eta } = await buildSetPendingAdminTransaction();
     await expectRevert(
       timelock.executeTransaction(target, value, signature, data, eta, { from: admin }),
-      "revert Timelock::executeTransaction: Transaction hasn't surpassed time lock.",
+      "Transaction hasn't surpassed time lock.",
     );
   });
 
@@ -219,7 +210,7 @@ contract("Timelock", (accounts) => {
     await time.increaseTo(latest.add(DELAY).add(GRACE_PERIOD).add(new BN(1)));
     await expectRevert(
       timelock.executeTransaction(target, value, signature, data, eta, { from: admin }),
-      "revert Timelock::executeTransaction: Transaction is stale.",
+      "Transaction is stale.",
     );
   });
 

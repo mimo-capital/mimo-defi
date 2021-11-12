@@ -1,8 +1,8 @@
 import {
   DemandMinerInstance,
   AccessControllerInstance,
-  MimoInstance,
-  MockBptInstance,
+  MIMOInstance,
+  MockBPTInstance,
   GovernanceAddressProviderInstance,
 } from "../../types/truffle-contracts";
 import { setupMIMO } from "../utils/helpers";
@@ -16,10 +16,10 @@ const AddressProvider = artifacts.require("AddressProvider");
 const GovernanceAddressProvider = artifacts.require("GovernanceAddressProvider");
 
 let demandMiner: DemandMinerInstance;
-let balancerToken: MockBptInstance;
+let balancerToken: MockBPTInstance;
 
 let a: GovernanceAddressProviderInstance;
-let mimo: MimoInstance;
+let mimo: MIMOInstance;
 let controller: AccessControllerInstance;
 
 contract("Demand Miner", (accounts) => {
@@ -146,10 +146,7 @@ contract("Demand Miner", (accounts) => {
   });
 
   it("deposit should fail if not enough tokens", async () => {
-    await expectRevert(
-      demandMiner.deposit(2, { from: C }),
-      "ERC20: transfer amount exceeds balance -- Reason given: ERC20: transfer amount exceeds balance.",
-    );
+    await expectRevert(demandMiner.deposit(2, { from: C }), "ERC20: transfer amount exceeds balance");
   });
 
   it.skip("should emit correct events");

@@ -1,8 +1,8 @@
 import {
   VaultsCoreInstance,
   VaultsCoreStateInstance,
-  MockWethInstance,
-  UsdxInstance,
+  MockWETHInstance,
+  USDXInstance,
   ConfigProviderInstance,
   AddressProviderInstance,
 } from "../types/truffle-contracts/index";
@@ -22,8 +22,8 @@ contract("VaultsCore upgrade", (accounts) => {
 
   let v1: {
     addresses: AddressProviderInstance;
-    weth: MockWethInstance;
-    stablex: UsdxInstance;
+    weth: MockWETHInstance;
+    stablex: USDXInstance;
     core: VaultsCoreInstance;
     coreState: VaultsCoreStateInstance;
     config: ConfigProviderInstance;
@@ -31,8 +31,8 @@ contract("VaultsCore upgrade", (accounts) => {
 
   let v2: {
     addresses: AddressProviderInstance;
-    weth: MockWethInstance;
-    stablex: UsdxInstance;
+    weth: MockWETHInstance;
+    stablex: USDXInstance;
     core: VaultsCoreInstance;
     coreState: VaultsCoreStateInstance;
     config: ConfigProviderInstance;

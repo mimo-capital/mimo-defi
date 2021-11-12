@@ -4,7 +4,7 @@ import {
   ConfigProviderInstance,
   VaultsCoreInstance,
   VaultsCoreStateInstance,
-  MockWethInstance,
+  MockWETHInstance,
 } from "../types/truffle-contracts";
 import { assert } from "chai";
 const { constants, basicSetup, setCollateralConfig } = require("./utils/helpers");
@@ -27,7 +27,7 @@ contract("ConfigProvider", (accounts) => {
 
   let controller: AccessControllerInstance;
   let a: AddressProviderInstance;
-  let weth: MockWethInstance;
+  let weth: MockWETHInstance;
   let config: ConfigProviderInstance;
   let core: VaultsCoreInstance;
   let coreState: VaultsCoreStateInstance;

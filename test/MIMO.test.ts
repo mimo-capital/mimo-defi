@@ -1,4 +1,4 @@
-import { AccessControllerInstance, MimoInstance, GovernanceAddressProviderInstance } from "../types/truffle-contracts";
+import { AccessControllerInstance, MIMOInstance, GovernanceAddressProviderInstance } from "../types/truffle-contracts";
 import { assert } from "chai";
 import { setupMIMO } from "./utils/helpers";
 
@@ -17,7 +17,7 @@ contract("MIMO", (accounts) => {
 
   let controller: AccessControllerInstance;
   let ga: GovernanceAddressProviderInstance;
-  let mimo: MimoInstance;
+  let mimo: MIMOInstance;
 
   beforeEach(async () => {
     controller = await AccessController.new({ from: owner });
@@ -30,10 +30,7 @@ contract("MIMO", (accounts) => {
     const hasMinterRole = await controller.hasRole(MIMO_MINTER_ROLE, nonMinter);
     assert.equal(hasMinterRole, false);
 
-    await expectRevert(
-      mimo.mint(address1, MINT_AMOUNT, { from: nonMinter }),
-      "Caller is not MIMO Minter -- Reason given: Caller is not MIMO Minter",
-    );
+    await expectRevert(mimo.mint(address1, MINT_AMOUNT, { from: nonMinter }), "Caller is not MIMO Minter");
   });
 
   it("minters should be able to mint", async () => {
@@ -49,10 +46,7 @@ contract("MIMO", (accounts) => {
 
   it("non-minters should NOT be able to burn", async () => {
     await mimo.mint(address1, MINT_AMOUNT, { from: minter });
-    await expectRevert(
-      mimo.burn(address1, MINT_AMOUNT, { from: nonMinter }),
-      "Caller is not MIMO Minter -- Reason given: Caller is not MIMO Minter",
-    );
+    await expectRevert(mimo.burn(address1, MINT_AMOUNT, { from: nonMinter }), "Caller is not MIMO Minter");
   });
 
   it("minters should be able to burn", async () => {

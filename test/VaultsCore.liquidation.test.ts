@@ -1,10 +1,10 @@
 import {
   VaultsCoreInstance,
   VaultsDataProviderInstance,
-  MockWethInstance,
+  MockWETHInstance,
   RatesManagerInstance,
   AccessControllerInstance,
-  UsdxInstance,
+  USDXInstance,
   MockChainlinkAggregatorInstance,
   PriceFeedInstance,
   LiquidationManagerInstance,
@@ -25,12 +25,12 @@ contract("VaultsCore liquidation", (accounts) => {
   const [owner, alice, bob] = accounts;
 
   let c: {
-    weth: MockWethInstance;
+    weth: MockWETHInstance;
     aggregator: MockChainlinkAggregatorInstance;
     config: ConfigProviderInstance;
     controller: AccessControllerInstance;
     feed: PriceFeedInstance;
-    stablex: UsdxInstance;
+    stablex: USDXInstance;
     core: VaultsCoreInstance;
     vaultsData: VaultsDataProviderInstance;
     rates: RatesManagerInstance;

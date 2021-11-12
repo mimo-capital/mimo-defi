@@ -24,6 +24,12 @@ COINS.forEach((COIN) => {
       controller = await AccessController.new();
       a = await AddressProvider.new(controller.address);
       coin = await COIN.new(a.address);
+
+      const accounts = await web3.eth.getAccounts();
+      const [deployer] = accounts;
+      const minterRole = await controller.MINTER_ROLE();
+
+      await controller.grantRole(minterRole, deployer);
     });
 
     it("USDX initializes correctly", async () => {
@@ -31,7 +37,6 @@ COINS.forEach((COIN) => {
       expect(symbol).to.equal(COIN.contractName);
 
       const name = await coin.name();
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       expect(name).to.equal(`${COIN.contractName.slice(0, 3)} Stablecoin`);
 
       const decimals = await coin.decimals();
@@ -97,7 +102,7 @@ COINS.forEach((COIN) => {
       await coin.approve(other, 100, { from: owner });
       await expectRevert(
         coin.transferFrom(owner, other, 101, { from: other }),
-        "ERC20: transfer amount exceeds balance.",
+        "ERC20: transfer amount exceeds balance",
       );
       await coin.transferFrom(owner, other, 100, { from: other });
       const balance = await coin.balanceOf(other);

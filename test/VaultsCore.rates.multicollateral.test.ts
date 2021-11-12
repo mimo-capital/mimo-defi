@@ -3,14 +3,14 @@ import {
   VaultsCoreInstance,
   VaultsCoreStateInstance,
   VaultsDataProviderInstance,
-  MockWethInstance,
-  MockWbtcInstance,
+  MockWETHInstance,
+  MockWBTCInstance,
   RatesManagerInstance,
   LiquidationManagerInstance,
   AccessControllerInstance,
   MockChainlinkAggregatorInstance,
   PriceFeedInstance,
-  UsdxInstance,
+  USDXInstance,
   ConfigProviderInstance,
 } from "../types/truffle-contracts";
 
@@ -26,13 +26,13 @@ contract("VaultsCore rates multi collateral", (accounts) => {
   const [owner, other] = accounts;
 
   let c: {
-    weth: MockWethInstance;
-    wbtc: MockWbtcInstance;
+    weth: MockWETHInstance;
+    wbtc: MockWBTCInstance;
     config: ConfigProviderInstance;
     aggregator: MockChainlinkAggregatorInstance;
     controller: AccessControllerInstance;
     feed: PriceFeedInstance;
-    usdx: UsdxInstance;
+    usdx: USDXInstance;
     core: VaultsCoreInstance;
     coreState: VaultsCoreStateInstance;
     vaultsData: VaultsDataProviderInstance;

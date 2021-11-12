@@ -1,13 +1,13 @@
 import {
   VaultsCoreInstance,
   VaultsDataProviderInstance,
-  MockWethInstance,
-  UsdxInstance,
+  MockWETHInstance,
+  USDXInstance,
   MockChainlinkAggregatorInstance,
   ConfigProviderInstance,
   VaultsCoreStateInstance,
   AddressProviderInstance,
-  MockWbtcInstance,
+  MockWBTCInstance,
 } from "../types/truffle-contracts";
 
 const { BN, time } = require("@openzeppelin/test-helpers");
@@ -27,8 +27,8 @@ contract("VaultsCore GAS costs", (accounts) => {
 
   let c: {
     addresses: AddressProviderInstance;
-    weth: MockWethInstance;
-    stablex: UsdxInstance;
+    weth: MockWETHInstance;
+    stablex: USDXInstance;
     core: VaultsCoreInstance;
     coreState: VaultsCoreStateInstance;
     vaultsData: VaultsDataProviderInstance;
@@ -129,8 +129,8 @@ contract("VaultsCore GAS costs", (accounts) => {
   describe("Upgrade gas cost", async () => {
     let c2: {
       addresses: AddressProviderInstance;
-      weth: MockWethInstance;
-      stablex: UsdxInstance;
+      weth: MockWETHInstance;
+      stablex: USDXInstance;
       core: VaultsCoreInstance;
       coreState: VaultsCoreStateInstance;
       vaultsData: VaultsDataProviderInstance;
@@ -138,7 +138,7 @@ contract("VaultsCore GAS costs", (accounts) => {
       aggregatorEUR: MockChainlinkAggregatorInstance;
       config: ConfigProviderInstance;
     };
-    let wbtc: MockWbtcInstance;
+    let wbtc: MockWBTCInstance;
 
     const gasUsed1: Record<string, number> = {};
     const gasUsed2: Record<string, number> = {};

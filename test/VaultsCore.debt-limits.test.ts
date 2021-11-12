@@ -2,10 +2,10 @@ import {
   VaultsCoreInstance,
   VaultsDataProviderInstance,
   ConfigProviderInstance,
-  MockWethInstance,
+  MockWETHInstance,
   RatesManagerInstance,
   AccessControllerInstance,
-  UsdxInstance,
+  USDXInstance,
 } from "../types/truffle-contracts";
 
 const { BN, expectRevert } = require("@openzeppelin/test-helpers");
@@ -20,10 +20,10 @@ contract("VaultsCore Debt Limits", (accounts) => {
   const [, other] = accounts;
 
   let c: {
-    weth: MockWethInstance;
+    weth: MockWETHInstance;
     controller: AccessControllerInstance;
     config: ConfigProviderInstance;
-    stablex: UsdxInstance;
+    stablex: USDXInstance;
     core: VaultsCoreInstance;
     rates: RatesManagerInstance;
     vaultsData: VaultsDataProviderInstance;

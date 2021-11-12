@@ -3,10 +3,10 @@ import {
   VaultsCoreInstance,
   VaultsCoreStateInstance,
   VaultsDataProviderInstance,
-  MockWethInstance,
+  MockWETHInstance,
   RatesManagerInstance,
   AccessControllerInstance,
-  UsdxInstance,
+  USDXInstance,
   FeeDistributorInstance,
   ConfigProviderInstance,
   AddressProviderInstance,
@@ -31,10 +31,10 @@ contract("FeeDistributor", (accounts) => {
   let all_shares: number[];
 
   let c: {
-    weth: MockWethInstance;
+    weth: MockWETHInstance;
     controller: AccessControllerInstance;
     vaultsData: VaultsDataProviderInstance;
-    stablex: UsdxInstance;
+    stablex: USDXInstance;
     core: VaultsCoreInstance;
     coreState: VaultsCoreStateInstance;
     rates: RatesManagerInstance;

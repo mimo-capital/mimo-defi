@@ -1,4 +1,4 @@
-import { LiquidationManagerInstance, MockWethInstance } from "../types/truffle-contracts";
+import { LiquidationManagerInstance, MockWETHInstance } from "../types/truffle-contracts";
 import { constants, basicSetup } from "./utils/helpers";
 
 contract("Liquidation Manager", (accounts) => {
@@ -6,7 +6,7 @@ contract("Liquidation Manager", (accounts) => {
 
   let c: {
     liquidator: LiquidationManagerInstance;
-    weth: MockWethInstance;
+    weth: MockWETHInstance;
   };
 
   beforeEach(async () => {

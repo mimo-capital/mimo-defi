@@ -11,6 +11,5 @@ contract AccessController is AccessControl {
   constructor() public {
     _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     _setupRole(MANAGER_ROLE, msg.sender);
-    _setupRole(MINTER_ROLE, msg.sender);
   }
 }

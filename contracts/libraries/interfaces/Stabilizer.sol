@@ -11,11 +11,21 @@ interface Stabilizer {
     address destination
   ) external;
 
+  function withdrawAll(address destination) external;
+
+  function liquidate(uint256 vaultId) external;
+
   function WETH() external view returns (address);
 
-  function EURX() external view returns (address);
+  function PAR() external view returns (address);
 
   function pool() external view returns (address);
+
+  function demandMiner() external view returns (address);
+
+  function mimoDistributor() external view returns (address);
+
+  function a() external view returns (address);
 
   function AUTOMATOR_ADDRESS() external view returns (address);
 

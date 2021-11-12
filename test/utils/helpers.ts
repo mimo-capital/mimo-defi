@@ -3,7 +3,7 @@ const { BN, time } = require("@openzeppelin/test-helpers");
 import {
   VaultsCoreInstance,
   VaultsDataProviderInstance,
-  MockWethInstance,
+  MockWETHInstance,
   ConfigProviderInstance,
   AccessControllerInstance,
 } from "../../types/truffle-contracts";
@@ -144,8 +144,12 @@ async function deployAll() {
   await a.setLiquidationManager(liquidator.address);
   await a.setVaultsDataProvider(vaultsData.address);
 
+  const accounts = await web3.eth.getAccounts();
+  const [deployer] = accounts;
+
   const minterRole = await controller.MINTER_ROLE();
   await controller.grantRole(minterRole, core.address); // Allow core to mint and burn USDX
+  await controller.grantRole(minterRole, deployer);
 
   const managerRole = await controller.MANAGER_ROLE();
   await controller.grantRole(managerRole, core.address);
@@ -202,10 +206,10 @@ async function basicSetup(
   // Add collateral type
   await setCollateralConfig(c.config, {
     collateralType: c.weth.address,
-    borrowRate: config.wethRate || RATE_0BPS,
-    debtLimit: config.wethDebtLimit || DEBT_LIMIT,
-    liquidationRatio: config.wethLiquidationRatio || MIN_LIQUIDATION_RATIO,
-    minCollateralRatio: config.wethMinCollateralRatio || MIN_COLLATERAL_RATIO,
+    borrowRate: config.wethRate ?? RATE_0BPS,
+    debtLimit: config.wethDebtLimit ?? DEBT_LIMIT,
+    liquidationRatio: config.wethLiquidationRatio ?? MIN_LIQUIDATION_RATIO,
+    minCollateralRatio: config.wethMinCollateralRatio ?? MIN_COLLATERAL_RATIO,
   });
 
   return c;
@@ -274,7 +278,7 @@ async function setupMIMO(
 async function depositAndBorrow(
   c: {
     core: VaultsCoreInstance;
-    weth: MockWethInstance;
+    weth: MockWETHInstance;
     vaultsData: VaultsDataProviderInstance;
   },
   {

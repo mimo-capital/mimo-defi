@@ -87,15 +87,15 @@ contract("AddressProvider", (accounts) => {
     ]);
 
     await Promise.all([
-      expectRevert(a.setAccessController(address2, { from: other }), "Caller is not a Manager."),
-      expectRevert(a.setConfigProvider(address2, { from: other }), "Caller is not a Manager."),
-      expectRevert(a.setVaultsCore(address2, { from: other }), "Caller is not a Manager."),
-      expectRevert(a.setStableX(address2, { from: other }), "Caller is not a Manager."),
-      expectRevert(a.setRatesManager(address2, { from: other }), "Caller is not a Manager."),
-      expectRevert(a.setPriceFeed(address2, { from: other }), "Caller is not a Manager."),
-      expectRevert(a.setLiquidationManager(address2, { from: other }), "Caller is not a Manager."),
-      expectRevert(a.setVaultsDataProvider(address2, { from: other }), "Caller is not a Manager."),
-      expectRevert(a.setFeeDistributor(address2, { from: other }), "Caller is not a Manager."),
+      expectRevert(a.setAccessController(address2, { from: other }), "Caller is not a Manager"),
+      expectRevert(a.setConfigProvider(address2, { from: other }), "Caller is not a Manager"),
+      expectRevert(a.setVaultsCore(address2, { from: other }), "Caller is not a Manager"),
+      expectRevert(a.setStableX(address2, { from: other }), "Caller is not a Manager"),
+      expectRevert(a.setRatesManager(address2, { from: other }), "Caller is not a Manager"),
+      expectRevert(a.setPriceFeed(address2, { from: other }), "Caller is not a Manager"),
+      expectRevert(a.setLiquidationManager(address2, { from: other }), "Caller is not a Manager"),
+      expectRevert(a.setVaultsDataProvider(address2, { from: other }), "Caller is not a Manager"),
+      expectRevert(a.setFeeDistributor(address2, { from: other }), "Caller is not a Manager"),
     ]);
   });
 

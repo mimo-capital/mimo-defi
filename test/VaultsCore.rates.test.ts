@@ -3,11 +3,11 @@ import {
   VaultsCoreInstance,
   VaultsCoreStateInstance,
   VaultsDataProviderInstance,
-  MockWethInstance,
+  MockWETHInstance,
   RatesManagerInstance,
   AccessControllerInstance,
   LiquidationManagerInstance,
-  UsdxInstance,
+  USDXInstance,
   ConfigProviderInstance,
 } from "../types/truffle-contracts";
 
@@ -24,9 +24,9 @@ contract("VaultsCore rates", (accounts) => {
   const [owner, other] = accounts;
 
   let c: {
-    weth: MockWethInstance;
+    weth: MockWETHInstance;
     controller: AccessControllerInstance;
-    stablex: UsdxInstance;
+    stablex: USDXInstance;
     core: VaultsCoreInstance;
     coreState: VaultsCoreStateInstance;
     vaultsData: VaultsDataProviderInstance;

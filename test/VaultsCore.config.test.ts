@@ -1,6 +1,6 @@
 import {
   VaultsCoreStateInstance,
-  MockWethInstance,
+  MockWETHInstance,
   AccessControllerInstance,
   AddressProviderInstance,
   ConfigProviderInstance,
@@ -16,7 +16,7 @@ const WETH = artifacts.require("MockWETH");
 contract("VaultsCore config & access control", () => {
   let controller: AccessControllerInstance;
   let a: AddressProviderInstance;
-  let weth: MockWethInstance;
+  let weth: MockWETHInstance;
   let coreState: VaultsCoreStateInstance;
   let config: ConfigProviderInstance;
 

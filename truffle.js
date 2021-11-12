@@ -1,4 +1,4 @@
-require("dotenv").config();
+require('dotenv').config();
 /**
  * Use this file to configure your truffle project. It's seeded with some
  * common settings for different networks and features like migrations,
@@ -19,11 +19,14 @@ require("dotenv").config();
  *
  */
 
-const HDWalletProvider = require("@truffle/hdwallet-provider");
+const HDWalletProvider = require('@truffle/hdwallet-provider');
 
 const RINKEBY_ENDPOINT = `https://rinkeby.infura.io/v3/${process.env.INFURA_TOKEN}`;
 const KOVAN_ENDPOINT = `https://kovan.infura.io/v3/${process.env.INFURA_TOKEN}`;
+const GOERLI_ENDPOINT = `https://goerli.infura.io/v3/${process.env.INFURA_TOKEN}`;
 const MAINNET_ENDPOINT = `https://mainnet.infura.io/v3/${process.env.INFURA_TOKEN}`;
+const POLYGON_ENDPOINT = `https://polygon-mainnet.infura.io/v3/${process.env.INFURA_TOKEN}`;
+const MUMBAI_ENDPOINT = `https://polygon-mumbai.infura.io/v3/${process.env.INFURA_TOKEN}`;
 
 module.exports = {
   /**
@@ -51,7 +54,13 @@ module.exports = {
       network_id: 42,
       skipDryRun: false,
       gasPrice: 50000000000, // 50 gwei
-      gas: 7000000,
+      gas: 12000000,
+    },
+    goerli: {
+      provider: () => new HDWalletProvider(process.env.MNEMONIC, GOERLI_ENDPOINT),
+      // eslint-disable-next-line camelcase
+      network_id: 5,
+      skipDryRun: false,
     },
     mainnet: {
       provider: () => new HDWalletProvider(process.env.MNEMONIC, MAINNET_ENDPOINT),
@@ -61,23 +70,44 @@ module.exports = {
       gasPrice: 0, // 0 gwei
       gas: 1000000, // 1m
     },
+    mumbai: {
+      provider: () => new HDWalletProvider(process.env.MNEMONIC, MUMBAI_ENDPOINT),
+      // eslint-disable-next-line camelcase
+      network_id: 80001,
+      // Confirmations: 2,
+      timeoutBlocks: 200,
+      skipDryRun: true,
+      gasPrice: 1000000000, // 1 gwei
+      gas: 12000000,
+    },
+    polygon: {
+      provider: () => new HDWalletProvider(process.env.MNEMONIC, POLYGON_ENDPOINT),
+      // eslint-disable-next-line camelcase
+      network_id: 137,
+      // Confirmations: 2,
+      timeoutBlocks: 200,
+      skipDryRun: true,
+      gasPrice: 5000000000, // 5 gwei
+      gas: 12000000,
+    },
     develop: {
       // eslint-disable-next-line camelcase
       network_id: 1,
-      host: "127.0.0.1",
+      host: '127.0.0.1',
       port: 8545,
-      from: "0xcc8793d5eB95fAa707ea4155e09b2D3F44F33D1E", // Multisig account
+      from: '0xcc8793d5eB95fAa707ea4155e09b2D3F44F33D1E', // Multisig account
       skipDryRun: false,
       gasPrice: 50000000000, // 50 gwei
       gas: 9000000, // 9m
     },
   },
 
-  plugins: ["solidity-coverage", "truffle-plugin-verify", "truffle-contract-size"],
+  plugins: ['solidity-coverage', 'truffle-plugin-verify', 'truffle-contract-size'],
 
   // eslint-disable-next-line camelcase
   api_keys: {
     etherscan: process.env.ETHERSCAN_API_KEY,
+    polygonscan: process.env.POLYGONSCAN_API_KEY,
   },
 
   // Set default mocha options here, use special reporters etc.
@@ -93,7 +123,7 @@ module.exports = {
   // Configure your compilers
   compilers: {
     solc: {
-      version: "0.6.12", // Fetch exact version from solc-bin (default: truffle's version)
+      version: '0.6.12', // Fetch exact version from solc-bin (default: truffle's version)
       // docker: true,        // Use "0.5.1" you've installed locally with docker (default: false)
       settings: {
         // See the solidity docs for advice about optimization and evmVersion

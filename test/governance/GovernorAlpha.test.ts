@@ -4,11 +4,14 @@ import {
   ConfigProviderInstance,
   AccessControllerInstance,
   VotingEscrowInstance,
-  MockMimoInstance,
+  MockMIMOInstance,
   TestTimelockInstance,
   GovernorAlphaInstance,
+  VotingMinerInstance,
+  MIMOInstance,
 } from "../../types/truffle-contracts";
 import { buildMultiProposal, buildTestProposal, Proposal } from "./utils";
+import { setupMIMO } from "../utils/helpers";
 
 const { BN, expectEvent, expectRevert, time } = require("@openzeppelin/test-helpers");
 
@@ -20,6 +23,7 @@ const MockMIMO = artifacts.require("MockMIMO");
 const VotingEscrow = artifacts.require("VotingEscrow");
 const Timelock = artifacts.require("TestTimelock");
 const GovernorAlpha = artifacts.require("GovernorAlpha");
+const VotingMiner = artifacts.require("VotingMiner");
 
 const MINT_AMOUNT = new BN("100000000000000000000"); // 100 GOV
 const STAKE_AMOUNT = new BN("50000000000000000000"); // 50 GOV
@@ -50,21 +54,28 @@ contract("GovernorAlpha", (accounts) => {
   let ga: GovernanceAddressProviderInstance;
   let config: ConfigProviderInstance;
   let controller: AccessControllerInstance;
-  let stakingToken: MockMimoInstance;
+  let stakingToken: MockMIMOInstance;
   let escrow: VotingEscrowInstance;
   let timelock: TestTimelockInstance;
   let governance: GovernorAlphaInstance;
+  let miner: VotingMinerInstance;
   let startTime: any;
+  let mimo: MIMOInstance;
 
   beforeEach(async () => {
     // Deploy gov token and escrow
     controller = await AccessController.new();
     stakingToken = await MockMIMO.new();
     timelock = await Timelock.new(owner, time.duration.days(2));
-    escrow = await VotingEscrow.new(stakingToken.address, controller.address, NAME, SYMBOL);
     a = await AddressProvider.new(controller.address);
     ga = await GovernanceAddressProvider.new(a.address);
+    miner = await VotingMiner.new(ga.address);
+    escrow = await VotingEscrow.new(stakingToken.address, controller.address, miner.address, NAME, SYMBOL);
     config = await ConfigProvider.new(a.address);
+
+    mimo = await setupMIMO(a.address, controller, owner, [owner]);
+    await ga.setMIMO(mimo.address);
+
     await a.setConfigProvider(config.address);
     await ga.setParallelAddressProvider(a.address);
     await ga.setVotingEscrow(escrow.address);
@@ -359,7 +370,7 @@ contract("GovernorAlpha", (accounts) => {
       const governanceGuardian = await governance.guardian();
       assert(governanceGuardian !== voter);
 
-      await expectRevert(governance.cancel(proposalId, { from: voter }), "Only Guardian can cancel.");
+      await expectRevert(governance.cancel(proposalId, { from: voter }), "Only Guardian can cancel");
       const proposalState = await governance.state(proposalId);
       assert.equal(proposalState.toNumber(), ProposalState.Active);
     });
@@ -414,7 +425,7 @@ contract("GovernorAlpha", (accounts) => {
       it("should NOT be able to execute an un-queued Proposal", async () => {
         await expectRevert(
           governance.execute(proposalId),
-          "GovernorAlpha::execute: proposal can only be executed if it is queued -- Reason given: GovernorAlpha::execute: proposal can only be executed if it is queued.",
+          "GovernorAlpha::execute: proposal can only be executed if it is queued",
         );
       });
 
@@ -494,10 +505,7 @@ contract("GovernorAlpha", (accounts) => {
     assert(beforeTimelockBalance.eq(INSUFFICIENT_AMOUNT));
 
     // Execute multi-transfer proposal which will revert because of insufficient balance
-    await expectRevert(
-      governance.execute(proposalId),
-      "Timelock::executeTransaction: Transaction execution reverted. -- Reason given: Timelock::executeTransaction: Transaction execution reverted.",
-    );
+    await expectRevert(governance.execute(proposalId), "Transaction execution reverted.");
 
     // Check balance of timelock is unchanged
     const afterTimelockBalance = await stakingToken.balanceOf(timelock.address);

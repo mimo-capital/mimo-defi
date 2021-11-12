@@ -3,11 +3,11 @@ import {
   VaultsCoreInstance,
   DebtNotifierInstance,
   VaultsDataProviderInstance,
-  MockWethInstance,
+  MockWETHInstance,
   AccessControllerInstance,
-  UsdxInstance,
+  USDXInstance,
   AddressProviderInstance,
-  MimoInstance,
+  MIMOInstance,
   GovernanceAddressProviderInstance,
   ConfigProviderInstance,
 } from "../../types/truffle-contracts";
@@ -25,16 +25,16 @@ contract("Supply Miner", (accounts) => {
   const [manager, alice] = accounts;
 
   let a: GovernanceAddressProviderInstance;
-  let mimo: MimoInstance;
+  let mimo: MIMOInstance;
   let supplyMiner: SupplyMinerInstance;
   let debtNotifier: DebtNotifierInstance;
 
   let parallel: {
-    weth: MockWethInstance;
+    weth: MockWETHInstance;
     addresses: AddressProviderInstance;
     controller: AccessControllerInstance;
     config: ConfigProviderInstance;
-    stablex: UsdxInstance;
+    stablex: USDXInstance;
     core: VaultsCoreInstance;
     vaultsData: VaultsDataProviderInstance;
     debtNotifier: DebtNotifierInstance;

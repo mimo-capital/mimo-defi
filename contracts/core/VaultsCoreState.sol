@@ -3,8 +3,6 @@
 pragma experimental ABIEncoderV2;
 pragma solidity 0.6.12;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
@@ -14,7 +12,6 @@ import "../interfaces/IVaultsCoreState.sol";
 import "../v1/interfaces/IVaultsCoreV1.sol";
 
 contract VaultsCoreState is IVaultsCoreState {
-  using SafeERC20 for IERC20;
   using SafeMath for uint256;
   using WadRayMath for uint256;
 

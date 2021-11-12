@@ -1,10 +1,11 @@
 import {
   AccessControllerInstance,
   MockGenericMinerInstance,
-  MimoInstance,
+  MIMOInstance,
   GovernanceAddressProviderInstance,
 } from "../../types/truffle-contracts";
 import { setupMIMO } from "../utils/helpers";
+const { BN } = require("@openzeppelin/test-helpers");
 
 const MockGenericMiner = artifacts.require("MockGenericMiner");
 const AccessController = artifacts.require("AccessController");
@@ -13,7 +14,7 @@ const GovernanceAddressProvider = artifacts.require("GovernanceAddressProvider")
 
 let genericMiner: MockGenericMinerInstance;
 let a: GovernanceAddressProviderInstance;
-let mimo: MimoInstance;
+let mimo: MIMOInstance;
 let controller: AccessControllerInstance;
 
 contract("Generic Miner", (accounts) => {
@@ -147,5 +148,57 @@ contract("Generic Miner", (accounts) => {
     await genericMiner.releaseMIMO(B);
     assert.equal((await mimo.balanceOf(B)).toString(), "225");
     await genericMiner.decreaseStake(B, 3); // A:0, B:0 -> A:175, B:225
+  });
+
+  it("should handle big differences in orders of magnitude correctly MIMO << STAKE", async () => {
+    const e26 = new BN("100000000000000000000000000"); // 1e26
+    await genericMiner.increaseStake(A, e26);
+    await genericMiner.increaseStake(B, e26);
+    await mimo.mint(genericMiner.address, 2);
+    await genericMiner.decreaseStake(A, e26);
+    await genericMiner.decreaseStake(B, e26);
+    assert.equal((await mimo.balanceOf(A)).toString(), "1");
+    assert.equal((await mimo.balanceOf(B)).toString(), "1");
+  });
+
+  it("should handle big differences in orders of magnitude correctly MIMO >> STAKE", async () => {
+    const e26 = new BN("100000000000000000000000000"); // 1e26
+    await genericMiner.increaseStake(A, 1);
+    await genericMiner.increaseStake(B, 1);
+    await mimo.mint(genericMiner.address, e26.mul(new BN(2)));
+    await genericMiner.decreaseStake(A, 1);
+    await genericMiner.decreaseStake(B, 1);
+    assert.equal((await mimo.balanceOf(A)).toString(), e26.toString());
+    assert.equal((await mimo.balanceOf(B)).toString(), e26.toString());
+  });
+
+  it("should handle big orders of magnitude correctly", async () => {
+    const e26 = new BN("100000000000000000000000000"); // 1e26
+    await genericMiner.increaseStake(A, e26.toString());
+    await genericMiner.increaseStake(B, e26.toString());
+    await mimo.mint(genericMiner.address, e26.mul(new BN(2)).toString());
+    await genericMiner.decreaseStake(A, e26.toString());
+    await genericMiner.decreaseStake(B, e26.toString());
+    assert.equal((await mimo.balanceOf(A)).toString(), e26.toString());
+    assert.equal((await mimo.balanceOf(B)).toString(), e26.toString());
+  });
+
+  it("should be able read pendingMIMO tokens", async () => {
+    await genericMiner.increaseStake(A, 1);
+    await mimo.mint(genericMiner.address, 100);
+    const pendingMIMO1 = await genericMiner.pendingMIMO(A);
+    assert.equal(pendingMIMO1.toString(), "100");
+
+    await genericMiner.increaseStake(B, 1);
+    await mimo.mint(genericMiner.address, 100);
+    const pendingMIMO2 = await genericMiner.pendingMIMO(A);
+    assert.equal(pendingMIMO2.toString(), "150");
+
+    await genericMiner.releaseMIMO(B);
+    const pendingMIMO3 = await genericMiner.pendingMIMO(A);
+    assert.equal(pendingMIMO3.toString(), "150");
+
+    const pendingMIMO4 = await genericMiner.pendingMIMO(B);
+    assert.equal(pendingMIMO4.toString(), "0");
   });
 });
