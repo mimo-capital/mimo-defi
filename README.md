@@ -1,4 +1,4 @@
-# titan
+# MIMO
 
 ## Prerequisites
 
